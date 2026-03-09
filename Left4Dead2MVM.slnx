@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Left4Dead2MVM.vcxproj" Id="203aca14-f75f-4543-9c72-96be4497586b" />
+</Solution>
