@@ -1,5 +1,6 @@
 #include "../Hooks.h"
 #include "../Features/Movement/Movement.h"
+#include "../../Features/Prediction/Prediction.h"
 
 void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_frametime, bool active)
 {
@@ -10,12 +11,26 @@ void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_fra
 	if (!cmd || !verified_cmd || !cmd->command_number)
 		return;
 
-	l4d2::local = reinterpret_cast<C_BasePlayer*>(interfaces::entity_list->GetClientEntity(interfaces::engine->GetLocalPlayer()));
+	l4d2::local = reinterpret_cast<CBasePlayer*>(interfaces::entity_list->GetClientEntity(interfaces::engine->GetLocalPlayer()));
 	l4d2::cmd = cmd;
 
 	if(interfaces::engine->IsInGame() && l4d2::local && l4d2::local->IsAlive())
 	{
+		Prediction::Update();
+
 		Movement::Bhop();
+
+		Prediction::Begin(cmd);
+		{
+			/* Insane rage functions, yassir assistant traceray edge bugs/align and etc */
+		}
+		Prediction::Finish();
+
+		Movement::EdgeJump();
+		/* useless functions, but whatever */
+		Movement::LongJump();
+		Movement::MiniJump();
+
 	}
 
 	verified_cmd->m_cmd = *cmd;

@@ -7743,6 +7743,35 @@ ImGuiKey ImGui::GetKeyIndex(ImGuiKey key)
 }
 #endif
 
+#include "Arrays.h"
+
+void ImGui::Hotkey(int* k, const ImVec2& size_arg)
+{
+    static bool waitingForKey = false;
+    static int delayCounter = 0;
+
+    if (!waitingForKey) {
+        if (ImGui::Button(KeyNames[*k], size_arg)) {
+            waitingForKey = true;
+            delayCounter = 0;
+        }
+    }
+    else {
+        ImGui::Button("...", size_arg);
+
+        if (++delayCounter > 3) {
+            for (int i = 0; i < 256; i++) {
+                if (GetAsyncKeyState(i) & 0x8000) {
+                    *k = i;
+                    waitingForKey = false;
+                    delayCounter = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+
 // Those names a provided for debugging purpose and are not meant to be saved persistently not compared.
 static const char* const GKeyNames[] =
 {

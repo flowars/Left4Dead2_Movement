@@ -1,6 +1,5 @@
 #include "Menu.h"
 
-
 void Menu::Render() noexcept
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -18,6 +17,23 @@ void Menu::Render() noexcept
 	ImGui::Begin("Astolfo hook", &show_overlay);
 
 	ImGui::Checkbox("Bhop", &Config::Movements::bBhop);
+	ImGui::Checkbox("EdgeJump", &Config::Movements::bEdgeJump);
+	if (Config::Movements::bEdgeJump)
+	{
+		ImGui::SameLine(); ImGui::Hotkey(&Config::Movements::kEdgeJump, ImVec2(150, 20));
+	}
+
+	ImGui::Checkbox("LongJump", &Config::Movements::bLongJump);
+	if (Config::Movements::bLongJump)
+	{
+		ImGui::SameLine(); ImGui::Hotkey(&Config::Movements::kLongJump, ImVec2(150, 20));
+	}
+
+	ImGui::Checkbox("MiniJump", &Config::Movements::bMiniJump);
+	if (Config::Movements::bMiniJump)
+	{
+		ImGui::SameLine(); ImGui::Hotkey(&Config::Movements::kMiniJump, ImVec2(150, 20));
+	}
 
 	ImGui::End();
 }

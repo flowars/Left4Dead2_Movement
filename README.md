@@ -4,3 +4,6 @@
 
 + Movement
     - Bhop
+    - EdgeJump
+    - LongJump(useless for this game)
+    - MiniJump(useless for this game)

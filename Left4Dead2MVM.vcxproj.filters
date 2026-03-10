@@ -105,6 +105,9 @@
     <ClCompile Include="Hooks\Functions\LockCursor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Features\Prediction\Prediction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Console.h">
@@ -449,8 +452,26 @@
     <ClInclude Include="SDK\Classes\Color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\Interfaces\GameMovement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Interfaces\CPrediction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\Prediction\Prediction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Classes\CGlobalVarsBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\ImGui\Arrays.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ImGui\freetype\lib\dfreetype.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Left4Dead2MVM.slnx" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@
 
 namespace l4d2
 {
-	inline C_BasePlayer* local = nullptr;
+	inline CBasePlayer* local = nullptr;
 	inline CUserCmd* cmd = nullptr;
 }
 

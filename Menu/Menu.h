@@ -8,3 +8,10 @@
 #include "../Core/Globals.h"
 #include "Config.h"
 
+inline bool CheckKey(int key)
+{
+	if (GetAsyncKeyState(key) & 0x8000)
+		return true;
+
+	return false;
+}

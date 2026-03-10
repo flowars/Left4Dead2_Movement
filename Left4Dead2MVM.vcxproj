@@ -162,6 +162,7 @@
     <ClCompile Include="Dependencies\Minhook\trampoline.c" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="Features\Movement\Bhop.cpp" />
+    <ClCompile Include="Features\Prediction\Prediction.cpp" />
     <ClCompile Include="Hooks\Functions\CreateMove.cpp" />
     <ClCompile Include="Hooks\Functions\LockCursor.cpp" />
     <ClCompile Include="Hooks\Functions\Present.cpp" />
@@ -177,6 +178,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Interfaces.h" />
+    <ClInclude Include="Dependencies\ImGui\Arrays.h" />
     <ClInclude Include="Dependencies\ImGui\freetype\include\freetype\config\ftconfig.h" />
     <ClInclude Include="Dependencies\ImGui\freetype\include\freetype\config\ftheader.h" />
     <ClInclude Include="Dependencies\ImGui\freetype\include\freetype\config\ftmodule.h" />
@@ -251,6 +253,7 @@
     <ClInclude Include="Dependencies\Minhook\MinHook.h" />
     <ClInclude Include="Dependencies\Minhook\trampoline.h" />
     <ClInclude Include="Features\Movement\Movement.h" />
+    <ClInclude Include="Features\Prediction\Prediction.h" />
     <ClInclude Include="Hooks\Hooks.h" />
     <ClInclude Include="Menu\Config.h" />
     <ClInclude Include="Menu\Menu.h" />
@@ -277,12 +280,15 @@
     <ClInclude Include="SDK\Classes\Random.h" />
     <ClInclude Include="SDK\Classes\Vector.h" />
     <ClInclude Include="SDK\Classes\Vector2D.h" />
+    <ClInclude Include="SDK\Classes\CGlobalVarsBase.h" />
+    <ClInclude Include="SDK\Interfaces\GameMovement.h" />
     <ClInclude Include="SDK\Interfaces\IBaseClientDLL.h" />
     <ClInclude Include="SDK\Interfaces\IClientEntityList.h" />
     <ClInclude Include="SDK\Interfaces\IInputSystem.h" />
     <ClInclude Include="SDK\Interfaces\ISurface.h" />
     <ClInclude Include="SDK\Interfaces\IVEngineClient.h" />
     <ClInclude Include="SDK\Interfaces\IVModelRender.h" />
+    <ClInclude Include="SDK\Interfaces\CPrediction.h" />
     <ClInclude Include="SDK\NetVars\DataMap.h" />
     <ClInclude Include="SDK\NetVars\NetVars.h" />
     <ClInclude Include="Utils\Colored_cout.h" />
@@ -293,6 +299,9 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ImGui\freetype\lib\dfreetype.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Left4Dead2MVM.slnx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
