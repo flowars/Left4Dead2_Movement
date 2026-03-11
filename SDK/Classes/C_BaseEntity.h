@@ -20,7 +20,8 @@ public:
 	NETVAR("DT_BasePlayer", "m_iHealth", m_iHealth, int)
 	NETVAR("DT_BasePlayer", "m_fFlags", m_fFlags, int)
 	NETVAR("DT_BasePlayer", "m_vecOrigin", m_vecOrigin, Vector)
-	NETVAR("DT_BasePlayer", "m_vecVelocity", m_vecVelocity, Vector)
+	NETVAR("DT_BasePlayer", "m_vecVelocity[0]", m_vecVelocity, Vector)
+	NETVAR("DT_BasePlayer", "m_flFallVelocity", m_flFallVelocity, float)
 	NETVAR("DT_BasePlayer", "m_nTickBase", m_nTickBase, int)
 
 	OFFSET(int, m_MoveType, 0x144)

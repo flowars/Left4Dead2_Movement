@@ -3,7 +3,7 @@
 #include "Vector2D.h"
 #include "Random.h"
 #include "Platform.h"
-
+#include <cmath>
 
 #define CHECK_VALID( _v)	0
 
@@ -163,6 +163,25 @@ public:
 	// Returns a vector with the min or max in X, Y, and Z.
 	Vector	Min(const Vector& vOther) const;
 	Vector	Max(const Vector& vOther) const;
+
+
+
+
+
+	//Custom
+	float NormalizeMovement() {
+		Vector res = *this;
+		float l = res.LengthSqr();
+		if (l != 0.0f)
+		{
+			res /= l;
+		}
+		else
+		{
+			res.x = res.y = res.z = 0.0f;
+		}
+		return l;
+	}
 };
 
 inline Vector::Vector(void)
@@ -408,6 +427,16 @@ FORCEINLINE  Vector& Vector::operator/=(const Vector& v)
 inline Vector Vector::ProjectOnto(const Vector& onto)
 {
 	return onto * (this->Dot(onto) / (onto.LengthSqr()));
+}
+
+inline vec_t Vector::Length2D(void) const
+{
+	return (vec_t)std::sqrtf(x * x + y * y);
+}
+
+inline vec_t Vector::Length2DSqr(void) const
+{
+	return (x * x + y * y);
 }
 
 

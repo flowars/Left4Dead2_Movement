@@ -10,6 +10,8 @@ void interfaces::Setup()
 	input_system = Capture<IInputSystem>("inputsystem.dll", "InputSystemVersion001");
 	game_movement = Capture<CGameMovement>("client.dll", "GameMovement001");
 	prediction = Capture<CPrediction>("client.dll", "VClientPrediction001");
+	cvar = Capture<ICvar>("vstdlib.dll", "VEngineCvar007");
+	engine_sound = Capture<void>("engine.dll", "IEngineSoundClient003");
 
 	//paterns
 	client_state = **reinterpret_cast<IClientState***>(memory::PatternScan("engine.dll", "A1 ? ? ? ? 83 C0 08 C3") + 1);

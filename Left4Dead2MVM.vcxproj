@@ -162,8 +162,10 @@
     <ClCompile Include="Dependencies\Minhook\trampoline.c" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="Features\Movement\Bhop.cpp" />
+    <ClCompile Include="Features\Movement\EdgeBug.cpp" />
     <ClCompile Include="Features\Prediction\Prediction.cpp" />
     <ClCompile Include="Hooks\Functions\CreateMove.cpp" />
+    <ClCompile Include="Hooks\Functions\EmitSound.cpp" />
     <ClCompile Include="Hooks\Functions\LockCursor.cpp" />
     <ClCompile Include="Hooks\Functions\Present.cpp" />
     <ClCompile Include="Hooks\Functions\Reset.cpp" />
@@ -278,12 +280,15 @@
     <ClInclude Include="SDK\Classes\Model.h" />
     <ClInclude Include="SDK\Classes\Platform.h" />
     <ClInclude Include="SDK\Classes\Random.h" />
+    <ClInclude Include="SDK\Classes\UtlMemory.h" />
+    <ClInclude Include="SDK\Classes\UtlVector.h" />
     <ClInclude Include="SDK\Classes\Vector.h" />
     <ClInclude Include="SDK\Classes\Vector2D.h" />
     <ClInclude Include="SDK\Classes\CGlobalVarsBase.h" />
     <ClInclude Include="SDK\Interfaces\GameMovement.h" />
     <ClInclude Include="SDK\Interfaces\IBaseClientDLL.h" />
     <ClInclude Include="SDK\Interfaces\IClientEntityList.h" />
+    <ClInclude Include="SDK\Interfaces\IConvar.h" />
     <ClInclude Include="SDK\Interfaces\IInputSystem.h" />
     <ClInclude Include="SDK\Interfaces\ISurface.h" />
     <ClInclude Include="SDK\Interfaces\IVEngineClient.h" />
@@ -295,6 +300,7 @@
     <ClInclude Include="Utils\Console.h" />
     <ClInclude Include="Core\Globals.h" />
     <ClInclude Include="Utils\FNV.h" />
+    <ClInclude Include="Utils\Math.h" />
     <ClInclude Include="Utils\Memory.h" />
   </ItemGroup>
   <ItemGroup>

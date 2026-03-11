@@ -12,3 +12,4 @@ void __fastcall Hooks::LockCursorHook(ISurface* ecx)
 	interfaces::input_system->EnableInput(true);
 	Hooks::LockCursorOriginal(ecx);
 }
+

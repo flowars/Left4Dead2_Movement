@@ -31,6 +31,11 @@ void Hooks::Setup()
 	else
 		std::cout << clr::green << ("LockCursor Hooked") << std::endl;
 
+	if (MH_CreateHook(memory::Get(interfaces::engine_sound, 5), &Hooks::EmitSoundHook,
+		reinterpret_cast<void**>(&Hooks::EmitSoundOriginal))) throw std::runtime_error("Failed to Hook EmitSound");
+	else
+		std::cout << clr::green << ("EmitSound Hooked") << std::endl;
+
 
 	if (MH_EnableHook(MH_ALL_HOOKS))
 		throw std::runtime_error("Hook Functions error");

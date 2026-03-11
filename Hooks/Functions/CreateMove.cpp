@@ -14,11 +14,15 @@ void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_fra
 	l4d2::local = reinterpret_cast<CBasePlayer*>(interfaces::entity_list->GetClientEntity(interfaces::engine->GetLocalPlayer()));
 	l4d2::cmd = cmd;
 
+	Vector SavedViewAngles = cmd->viewangles;
+
 	if(interfaces::engine->IsInGame() && l4d2::local && l4d2::local->IsAlive())
 	{
 		Prediction::Update();
 
 		Movement::Bhop();
+
+		printf("m_flFallVelocity: %.2f \n", l4d2::local->m_flFallVelocity());
 
 		Prediction::Begin(cmd);
 		{
@@ -27,9 +31,15 @@ void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_fra
 		Prediction::Finish();
 
 		Movement::EdgeJump();
+
 		/* useless functions, but whatever */
-		Movement::LongJump();
-		Movement::MiniJump();
+		{
+			Movement::LongJump();
+			Movement::MiniJump();
+		}
+
+		Movement::FixMovement(SavedViewAngles);
+		Movement::EdgeBug();
 
 	}
 

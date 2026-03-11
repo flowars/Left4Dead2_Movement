@@ -35,5 +35,21 @@ void Menu::Render() noexcept
 		ImGui::SameLine(); ImGui::Hotkey(&Config::Movements::kMiniJump, ImVec2(150, 20));
 	}
 
+	ImGui::Checkbox("EdgeBug", &Config::Movements::bEdgeBug);
+	if (Config::Movements::bEdgeBug) 
+	{
+		ImGui::SameLine(); ImGui::Hotkey(&Config::Movements::kEdgeBug, ImVec2(150, 20));
+		ImGui::Text("EdgeBug Ticks");
+		ImGui::SliderInt("##EdgeBugTicks", &Config::Movements::EdgeBugTicks, 0, 128);
+		ImGui::Checkbox("Advanced EdgeBug Detection", &Config::Movements::ExtendedEdgeBugPaths);
+		if (Config::Movements::ExtendedEdgeBugPaths)
+		{
+			ImGui::Text("EdgeBug Paths");
+			ImGui::SliderInt("##EdgeBugPaths", &Config::Movements::EdgeBugPaths, 0, 30);
+			ImGui::Text("EdgeBug Angle");
+			ImGui::SliderFloat("##EdgeBugAngle", &Config::Movements::EdgeBugAngle, 0.f, 180.f);
+		}
+	}
+
 	ImGui::End();
 }

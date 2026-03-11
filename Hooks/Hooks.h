@@ -33,4 +33,36 @@ namespace Hooks
 	using LockCursorfn = void(__fastcall*)(ISurface*);
 	inline LockCursorfn LockCursorOriginal;
 	void __fastcall LockCursorHook(ISurface* ecx);
+
+	using EmitSoundfn = void(__fastcall*)(void*, void*,
+		int,
+		int,
+		int,
+		int,
+		float,
+		int,
+		int,
+		int,
+		int,
+		int,
+		int,
+		int,
+		float,
+		int);
+	inline EmitSoundfn EmitSoundOriginal;
+	void __fastcall EmitSoundHook(void* ecx, void* edx,
+		int a2,
+		int a3,
+		int a4,
+		int a5,
+		float a6,
+		int a7,
+		int a8,
+		int a9,
+		int a10,
+		int a11,
+		int a12,
+		int a13,
+		float a14,
+		int a15);
 }
