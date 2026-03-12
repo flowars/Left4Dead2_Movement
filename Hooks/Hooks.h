@@ -8,6 +8,8 @@
 #include "../Core/Interfaces.h"
 #include "../Utils/Memory.h"
 
+#include "../Menu/Config.h"
+
 namespace Hooks
 {
 	void Setup();
@@ -65,4 +67,12 @@ namespace Hooks
 		int a13,
 		float a14,
 		int a15);
+
+	using TryPlayerMovefn = int(__fastcall*)(void*, void*, Vector*, trace_t*);
+	inline TryPlayerMovefn TryPlayerMoveClientOriginal;
+	int __fastcall TryPlayerMoveClient(void* ecx, void* ebp, Vector* pFirstDest, trace_t* pFirstTrace);
+
+	using TryPlayerMovefn = int(__fastcall*)(void*, void*, Vector*, trace_t*);
+	inline TryPlayerMovefn TryPlayerMoveServerOriginal;
+	int __fastcall TryPlayerMoveServer(void* ecx, void* ebp, Vector* pFirstDest, trace_t* pFirstTrace);
 }

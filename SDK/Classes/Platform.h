@@ -13,3 +13,4 @@
 
 #define DECL_ALIGN(x)			/* */
 #define ALIGN16 DECL_ALIGN(16)
+#define ALIGN16_POST

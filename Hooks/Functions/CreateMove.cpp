@@ -1,6 +1,7 @@
 #include "../Hooks.h"
 #include "../Features/Movement/Movement.h"
 #include "../../Features/Prediction/Prediction.h"
+#include "../../Features/Misc/Misc.h"
 
 void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_frametime, bool active)
 {
@@ -22,7 +23,10 @@ void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_fra
 
 		Movement::Bhop();
 
-		printf("m_flFallVelocity: %.2f \n", l4d2::local->m_flFallVelocity());
+		if (interfaces::engine->IsDedicatedServer())
+			Misc::Cvars();
+
+		printf("Position.z: %.2f(%p) \t Velocity.z: %.2f \t fallVelocity: %.2f \n", l4d2::local->m_vecOrigin().z, &l4d2::local->m_vecOrigin(), l4d2::local->m_vecVelocity().z, l4d2::local->m_flFallVelocity());
 
 		Prediction::Begin(cmd);
 		{

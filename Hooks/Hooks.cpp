@@ -36,6 +36,15 @@ void Hooks::Setup()
 	else
 		std::cout << clr::green << ("EmitSound Hooked") << std::endl;
 
+	if (MH_CreateHook(memory::PatternScan("client.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 56 57 8B 43 0C 8B F1 8B 0D"), &Hooks::TryPlayerMoveClient,
+		reinterpret_cast<void**>(&Hooks::TryPlayerMoveClientOriginal))) throw std::runtime_error("Failed to Hook TryPlayerMove");
+	else
+		std::cout << clr::green << ("TryPlayerMove Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::PatternScan("server.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 56 57 8B 43 0C 8B F1 8B 0D"), &Hooks::TryPlayerMoveServer,
+		reinterpret_cast<void**>(&Hooks::TryPlayerMoveServerOriginal))) throw std::runtime_error("Failed to Hook TryPlayerMove(server)");
+	else
+		std::cout << clr::green << ("TryPlayerMove(server) Hooked") << std::endl;
 
 	if (MH_EnableHook(MH_ALL_HOOKS))
 		throw std::runtime_error("Hook Functions error");

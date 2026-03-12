@@ -36,6 +36,17 @@ bool check_edge_bug(CUserCmd* cmd, bool& brk) {
 /* Player when he jumps, always stay in ducked bbox, so it should be recoded only for stand || crouch state, but rn im too lazy */
 void Movement::EdgeBug()
 {
+	if (Config::Movements::EdgeBugNoDamage && Detect_EB)
+	{
+		/* set falldamage to 0 */
+
+		CBasePlayer* server_player = nullptr;
+		server_player = server_player->UTIL_PlayerByIndex(1);
+
+		if (server_player)
+			server_player->m_flFallVelocity_server() = 0.f;
+	}
+
 	if (!(Config::Movements::bEdgeBug) || !CheckKey(Config::Movements::kEdgeBug)) {
 		EdgeBug_data.DetectTick = 0;
 		EdgeBug_data.EdgebugTick = 0;

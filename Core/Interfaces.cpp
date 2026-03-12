@@ -12,6 +12,12 @@ void interfaces::Setup()
 	prediction = Capture<CPrediction>("client.dll", "VClientPrediction001");
 	cvar = Capture<ICvar>("vstdlib.dll", "VEngineCvar007");
 	engine_sound = Capture<void>("engine.dll", "IEngineSoundClient003");
+	trace = Capture<IEngineTrace>("engine.dll", "EngineTraceClient003");
+
+	//server
+	game_movement_server = Capture<CGameMovement>("server.dll", "GameMovement001");
+	move_helper_server = **reinterpret_cast<IMoveHelper***>(memory::PatternScan(("server.dll"), ("A1 ? ? ? ? 8B 10 8B 52 1C 81 C1 ? ? ? ? 68 ? ? ? ?")) + 1);
+	trace_server = Capture<IEngineTrace>("engine.dll", "IEngineSoundServer003");
 
 	//paterns
 	client_state = **reinterpret_cast<IClientState***>(memory::PatternScan("engine.dll", "A1 ? ? ? ? 83 C0 08 C3") + 1);

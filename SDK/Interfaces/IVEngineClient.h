@@ -2,6 +2,7 @@
 #include "../Classes/Checksum_CRC.h"
 #include "../Classes/Vector.h"
 #include "../Classes/Model.h"
+#include "../../Utils/Memory.h"
 
 class IMaterial;
 struct client_textmessage_t;
@@ -122,4 +123,10 @@ public:
 	// Returns true if the loading plaque should be drawn
 	virtual bool				IsDrawingLoadingImage(void) = 0;
 	virtual void				HideLoadingPlaque(void) = 0;
+
+	bool IsDedicatedServer()
+	{
+		static auto address = memory::PatternScan("engine.dll", "A0 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC CC 55 8B EC B8 ? ? ? ?");
+		return address;
+	}
 };

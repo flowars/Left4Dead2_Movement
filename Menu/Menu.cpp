@@ -51,5 +51,14 @@ void Menu::Render() noexcept
 		}
 	}
 
+	ImGui::Checkbox("Features only for LAN", &Config::Movements::bLAN);
+	if(Config::Movements::bLAN)
+	{
+		ImGui::Checkbox("Reset FallDamage after EdgeBug(Like CS:GO)", &Config::Movements::EdgeBugNoDamage);
+		ImGui::Checkbox("CS:GO TryPlayerMove", &Config::Movements::bTryPlayerMove);
+		ImGui::Text("AirAccelerate");
+		ImGui::SliderFloat("##AirAccelerate", &Config::Movements::fAiraccelerate, 0.f, 100.f);
+	}
+
 	ImGui::End();
 }

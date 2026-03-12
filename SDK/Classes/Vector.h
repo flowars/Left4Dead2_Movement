@@ -1,9 +1,12 @@
 #pragma once
+
+#include <cmath>
+#include <limits>
+
 #include "BaseTypes.h"
 #include "Vector2D.h"
 #include "Random.h"
 #include "Platform.h"
-#include <cmath>
 
 #define CHECK_VALID( _v)	0
 
@@ -344,6 +347,51 @@ inline void Vector::Negate()
 	x = -x; y = -y; z = -z;
 }
 
+//-----------------------------------------------------------------------------
+// dot, cross
+//-----------------------------------------------------------------------------
+FORCEINLINE vec_t DotProduct(const Vector& a, const Vector& b)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	return(a.x * b.x + a.y * b.y + a.z * b.z);
+}
+
+inline void CrossProduct(const Vector& a, const Vector& b, Vector& result)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	//Assert(&a != &result);
+	//Assert(&b != &result);
+	result.x = a.y * b.z - a.z * b.y;
+	result.y = a.z * b.x - a.x * b.z;
+	result.z = a.x * b.y - a.y * b.x;
+}
+
+// for backwards compatability
+inline vec_t Vector::Dot(const Vector& vOther) const
+{
+	CHECK_VALID(vOther);
+	return DotProduct(*this, vOther);
+}
+
+//-----------------------------------------------------------------------------
+// length
+//-----------------------------------------------------------------------------
+
+inline vec_t VectorLength(const Vector& v)
+{
+	CHECK_VALID(v);
+	return (vec_t)std::sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+inline vec_t Vector::Length(void) const
+{
+	CHECK_VALID(*this);
+	return VectorLength(*this);
+}
+
+
 FORCEINLINE  Vector& Vector::operator+=(const Vector& v)
 {
 	CHECK_VALID(*this);
@@ -439,4 +487,519 @@ inline vec_t Vector::Length2DSqr(void) const
 	return (x * x + y * y);
 }
 
+inline void VectorAdd(const Vector& a, const Vector& b, Vector& result)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	result.x = a.x + b.x;
+	result.y = a.y + b.y;
+	result.z = a.z + b.z;
+}
 
+inline void VectorMA(const Vector& start, float scale, const Vector& direction, Vector& dest)
+{
+	CHECK_VALID(start);
+	CHECK_VALID(direction);
+	dest.x = start.x + scale * direction.x;
+	dest.y = start.y + scale * direction.y;
+	dest.z = start.z + scale * direction.z;
+}
+
+FORCEINLINE void VectorSubtract(const Vector& a, const Vector& b, Vector& c)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	c.x = a.x - b.x;
+	c.y = a.y - b.y;
+	c.z = a.z - b.z;
+}
+
+FORCEINLINE void VectorMultiply(const Vector& a, vec_t b, Vector& c)
+{
+	CHECK_VALID(a);
+	//Assert(IsFinite(b));
+	c.x = a.x * b;
+	c.y = a.y * b;
+	c.z = a.z * b;
+}
+
+FORCEINLINE void VectorMultiply(const Vector& a, const Vector& b, Vector& c)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	c.x = a.x * b.x;
+	c.y = a.y * b.y;
+	c.z = a.z * b.z;
+}
+
+// for backwards compatability
+inline void VectorScale(const Vector& in, vec_t scale, Vector& result)
+{
+	VectorMultiply(in, scale, result);
+}
+
+
+FORCEINLINE void VectorDivide(const Vector& a, vec_t b, Vector& c)
+{
+	CHECK_VALID(a);
+	//Assert(b != 0.0f);
+	vec_t oob = 1.0f / b;
+	c.x = a.x * oob;
+	c.y = a.y * oob;
+	c.z = a.z * oob;
+}
+
+FORCEINLINE void VectorDivide(const Vector& a, const Vector& b, Vector& c)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	//Assert((b.x != 0.0f) && (b.y != 0.0f) && (b.z != 0.0f));
+	c.x = a.x / b.x;
+	c.y = a.y / b.y;
+	c.z = a.z / b.z;
+}
+
+// FIXME: Remove
+// For backwards compatability
+inline void	Vector::MulAdd(const Vector& a, const Vector& b, float scalar)
+{
+	CHECK_VALID(a);
+	CHECK_VALID(b);
+	x = a.x + b.x * scalar;
+	y = a.y + b.y * scalar;
+	z = a.z + b.z * scalar;
+}
+
+inline void VectorLerp(const Vector& src1, const Vector& src2, vec_t t, Vector& dest)
+{
+	CHECK_VALID(src1);
+	CHECK_VALID(src2);
+	dest.x = src1.x + (src2.x - src1.x) * t;
+	dest.y = src1.y + (src2.y - src1.y) * t;
+	dest.z = src1.z + (src2.z - src1.z) * t;
+}
+
+inline Vector VectorLerp(const Vector& src1, const Vector& src2, vec_t t)
+{
+	Vector result;
+	VectorLerp(src1, src2, t, result);
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+// arithmetic operations
+//-----------------------------------------------------------------------------
+
+inline Vector Vector::operator-(void) const
+{
+	return Vector(-x, -y, -z);
+}
+
+inline Vector Vector::operator+(const Vector& v) const
+{
+	Vector res;
+	VectorAdd(*this, v, res);
+	return res;
+}
+
+inline Vector Vector::operator-(const Vector& v) const
+{
+	Vector res;
+	VectorSubtract(*this, v, res);
+	return res;
+}
+
+inline Vector Vector::operator*(float fl) const
+{
+	Vector res;
+	VectorMultiply(*this, fl, res);
+	return res;
+}
+
+inline Vector Vector::operator*(const Vector& v) const
+{
+	Vector res;
+	VectorMultiply(*this, v, res);
+	return res;
+}
+
+inline Vector Vector::operator/(float fl) const
+{
+	Vector res;
+	VectorDivide(*this, fl, res);
+	return res;
+}
+
+inline Vector Vector::operator/(const Vector& v) const
+{
+	Vector res;
+	VectorDivide(*this, v, res);
+	return res;
+}
+
+inline Vector operator*(float fl, const Vector& v)
+{
+	return v * fl;
+}
+
+inline vec_t Vector::NormalizeInPlace()
+{
+	const float length = this->Length();
+	const float radius = 1.0f / (length + std::numeric_limits< float >::epsilon());
+
+	this->x *= radius;
+	this->y *= radius;
+	this->z *= radius;
+
+	return length;
+}
+
+class ALIGN16 VectorAligned : public Vector
+{
+public:
+	inline VectorAligned(void) {};
+	inline VectorAligned(vec_t X, vec_t Y, vec_t Z)
+	{
+		Init(X, Y, Z);
+	}
+
+#ifdef VECTOR_NO_SLOW_OPERATIONS
+
+private:
+	// No copy constructors allowed if we're in optimal mode
+	VectorAligned(const VectorAligned& vOther);
+	VectorAligned(const Vector& vOther);
+
+#else
+public:
+	explicit VectorAligned(const Vector& vOther)
+	{
+		Init(vOther.x, vOther.y, vOther.z);
+	}
+
+	VectorAligned& operator=(const Vector& vOther)
+	{
+		Init(vOther.x, vOther.y, vOther.z);
+		return *this;
+	}
+
+	VectorAligned& operator=(const VectorAligned& vOther)
+	{
+		// we know we're aligned, so use simd
+		// we can't use the convenient abstract interface coz it gets declared later
+#ifdef _X360
+		XMStoreVector4A(Base(), XMLoadVector4A(vOther.Base()));
+#elif _WIN32
+		_mm_store_ps(Base(), _mm_load_ps(vOther.Base()));
+#else
+		Init(vOther.x, vOther.y, vOther.z);
+#endif
+		return *this;
+	}
+
+
+#endif
+	float w;	// this space is used anyway
+//
+//#if !defined(NO_MALLOC_OVERRIDE)
+//	void* operator new[](size_t nSize)
+//	{
+//		return MemAlloc_AllocAligned(nSize, 16);
+//	}
+//
+//	void* operator new[](size_t nSize, const char* pFileName, int nLine)
+//	{
+//		return MemAlloc_AllocAlignedFileLine(nSize, 16, pFileName, nLine);
+//	}
+//
+//	void* operator new[](size_t nSize, int /*nBlockUse*/, const char* pFileName, int nLine)
+//	{
+//		return MemAlloc_AllocAlignedFileLine(nSize, 16, pFileName, nLine);
+//	}
+//
+//	void operator delete[](void* p)
+//	{
+//		MemAlloc_FreeAligned(p);
+//	}
+//
+//	void operator delete[](void* p, const char* pFileName, int nLine)
+//	{
+//		MemAlloc_FreeAligned(p, pFileName, nLine);
+//	}
+//
+//	void operator delete[](void* p, int /*nBlockUse*/, const char* pFileName, int nLine)
+//	{
+//		MemAlloc_FreeAligned(p, pFileName, nLine);
+//	}
+//
+//	// please don't allocate a single quaternion...
+//	void* operator new   (size_t nSize)
+//	{
+//		return MemAlloc_AllocAligned(nSize, 16);
+//	}
+//	void* operator new   (size_t nSize, const char* pFileName, int nLine)
+//	{
+//		return MemAlloc_AllocAlignedFileLine(nSize, 16, pFileName, nLine);
+//	}
+//	void* operator new   (size_t nSize, int /*nBlockUse*/, const char* pFileName, int nLine)
+//	{
+//		return MemAlloc_AllocAlignedFileLine(nSize, 16, pFileName, nLine);
+//	}
+//	void operator delete (void* p)
+//	{
+//		MemAlloc_FreeAligned(p);
+//	}
+//
+//	void operator delete (void* p, const char* pFileName, int nLine)
+//	{
+//		MemAlloc_FreeAligned(p, pFileName, nLine);
+//	}
+//
+//	void operator delete (void* p, int /*nBlockUse*/, const char* pFileName, int nLine)
+//	{
+//		MemAlloc_FreeAligned(p, pFileName, nLine);
+//	}
+//#endif
+} ALIGN16_POST;
+
+//typedef __m128 fltx4;
+//typedef const fltx4& FLTX4;
+//
+//FORCEINLINE fltx4 AddSIMD(const fltx4& a, const fltx4& b)				// a+b
+//{
+//	return _mm_add_ps(a, b);
+//}
+//
+//FORCEINLINE fltx4 SubSIMD(const fltx4& a, const fltx4& b)				// a-b
+//{
+//	return _mm_sub_ps(a, b);
+//};
+//
+//FORCEINLINE fltx4 MulSIMD(const fltx4& a, const fltx4& b)				// a*b
+//{
+//	return _mm_mul_ps(a, b);
+//};
+//
+//FORCEINLINE fltx4 DivSIMD(const fltx4& a, const fltx4& b)				// a/b
+//{
+//	return _mm_div_ps(a, b);
+//};
+//
+//FORCEINLINE fltx4 MaddSIMD(const fltx4& a, const fltx4& b, const fltx4& c)				// a*b + c
+//{
+//	return AddSIMD(MulSIMD(a, b), c);
+//}
+//
+//FORCEINLINE fltx4 ReplicateX4(float flValue)
+//{
+//	__m128 value = _mm_set_ss(flValue);
+//	return _mm_shuffle_ps(value, value, 0);
+//}
+//
+//FORCEINLINE fltx4 ReplicateX4(const float* flValue)
+//{
+//	__m128 value = _mm_set_ss(*flValue);
+//	return _mm_shuffle_ps(value, value, 0);
+//}
+//// Componentwise multiply
+//FORCEINLINE fltx4 operator*(FLTX4 a, FLTX4 b)
+//{
+//	return MulSIMD(a, b);
+//}
+//// Componentwise subtract
+//FORCEINLINE fltx4 operator-(FLTX4 a, FLTX4 b)
+//{
+//	return SubSIMD(a, b);
+//}
+//extern const fltx4 Four_Zeros;
+//// Return one in the fastest way -- on the x360, faster even than loading.
+//FORCEINLINE fltx4 LoadZeroSIMD(void)
+//{
+//	return Four_Zeros;
+//}
+//
+//FORCEINLINE fltx4 NegSIMD(const fltx4& a) // negate: -a
+//{
+//	return SubSIMD(LoadZeroSIMD(), a);
+//}
+//// unary negate
+//FORCEINLINE fltx4 operator-(FLTX4 a)
+//{
+//	return NegSIMD(a);
+//}
+//
+//class ALIGN16 FourVectors
+//{
+//public:
+//	fltx4 x, y, z;
+//	FourVectors(void)
+//	{
+//	}
+//
+//	FourVectors(FourVectors const& src)
+//	{
+//		x = src.x;
+//		y = src.y;
+//		z = src.z;
+//	}
+//
+//	explicit FORCEINLINE FourVectors(float a)
+//	{
+//		fltx4 aReplicated = ReplicateX4(a);
+//		x = y = z = aReplicated;
+//	}
+//
+//	FORCEINLINE void Init(void)
+//	{
+//		x = Four_Zeros;
+//		y = Four_Zeros;
+//		z = Four_Zeros;
+//	}
+//
+//	FORCEINLINE void Init(float flX, float flY, float flZ)
+//	{
+//		x = ReplicateX4(flX);
+//		y = ReplicateX4(flY);
+//		z = ReplicateX4(flZ);
+//	}
+//
+//	FORCEINLINE FourVectors(float flX, float flY, float flZ)
+//	{
+//		Init(flX, flY, flZ);
+//	}
+//
+//	FORCEINLINE void Init(fltx4 const& fl4X, fltx4 const& fl4Y, fltx4 const& fl4Z)
+//	{
+//		x = fl4X;
+//		y = fl4Y;
+//		z = fl4Z;
+//	}
+//
+//	FORCEINLINE FourVectors(fltx4 const& fl4X, fltx4 const& fl4Y, fltx4 const& fl4Z)
+//	{
+//		Init(fl4X, fl4Y, fl4Z);
+//	}
+//
+//	FORCEINLINE fltx4 const& operator[](int idx) const
+//	{
+//		return *((&x) + idx);
+//	}
+//
+//	FORCEINLINE fltx4& operator[](int idx)
+//	{
+//		return *((&x) + idx);
+//	}
+//
+//	FORCEINLINE void operator+=(FourVectors const& b)			//< add 4 vectors to another 4 vectors
+//	{
+//		x = AddSIMD(x, b.x);
+//		y = AddSIMD(y, b.y);
+//		z = AddSIMD(z, b.z);
+//	}
+//
+//	FORCEINLINE void operator-=(FourVectors const& b)			//< subtract 4 vectors from another 4
+//	{
+//		x = SubSIMD(x, b.x);
+//		y = SubSIMD(y, b.y);
+//		z = SubSIMD(z, b.z);
+//	}
+//
+//	FORCEINLINE void operator*=(FourVectors const& b)			//< scale all four vectors per component scale
+//	{
+//		x = MulSIMD(x, b.x);
+//		y = MulSIMD(y, b.y);
+//		z = MulSIMD(z, b.z);
+//	}
+//
+//	FORCEINLINE void operator*=(const fltx4& scale)			//< scale 
+//	{
+//		x = MulSIMD(x, scale);
+//		y = MulSIMD(y, scale);
+//		z = MulSIMD(z, scale);
+//	}
+//
+//	FORCEINLINE void operator*=(float scale)					//< uniformly scale all 4 vectors
+//	{
+//		fltx4 scalepacked = ReplicateX4(scale);
+//		*this *= scalepacked;
+//	}
+//
+//	FORCEINLINE fltx4 operator*(FourVectors const& b) const		//< 4 dot products
+//	{
+//		fltx4 dot = MulSIMD(x, b.x);
+//		dot = MaddSIMD(y, b.y, dot);
+//		dot = MaddSIMD(z, b.z, dot);
+//		return dot;
+//	}
+//
+//	FORCEINLINE fltx4 operator*(Vector const& b) const			//< dot product all 4 vectors with 1 vector
+//	{
+//		fltx4 dot = MulSIMD(x, ReplicateX4(b.x));
+//		dot = MaddSIMD(y, ReplicateX4(b.y), dot);
+//		dot = MaddSIMD(z, ReplicateX4(b.z), dot);
+//		return dot;
+//	}
+//
+//	FORCEINLINE FourVectors operator*(float b) const					//< scale
+//	{
+//		fltx4 scalepacked = ReplicateX4(b);
+//		FourVectors res;
+//		res.x = MulSIMD(x, scalepacked);
+//		res.y = MulSIMD(y, scalepacked);
+//		res.z = MulSIMD(z, scalepacked);
+//		return res;
+//	}
+//
+//	FORCEINLINE FourVectors operator*(FLTX4 fl4Scale) const					//< scale
+//	{
+//		FourVectors res;
+//		res.x = MulSIMD(x, fl4Scale);
+//		res.y = MulSIMD(y, fl4Scale);
+//		res.z = MulSIMD(z, fl4Scale);
+//		return res;
+//	}
+//
+//	FORCEINLINE void operator=(FourVectors const& src)
+//	{
+//		x = src.x;
+//		y = src.y;
+//		z = src.z;
+//	}
+//
+//};
+//
+//inline FourVectors operator-(const FourVectors& a, const FourVectors& b)
+//{
+//	FourVectors ret;
+//	ret.x = SubSIMD(a.x, b.x);
+//	ret.y = SubSIMD(a.y, b.y);
+//	ret.z = SubSIMD(a.z, b.z);
+//	return ret;
+//}
+//
+//#define _MM_SHUFFLE(fp3,fp2,fp1,fp0) (((fp3) << 6) | ((fp2) << 4) | \
+//                                     ((fp1) << 2) | ((fp0)))
+//// remember, the SSE numbers its words 3 2 1 0
+//// The way we want to specify shuffles is backwards from the default
+//// MM_SHUFFLE_REV is in array index order (default is reversed)
+//#define MM_SHUFFLE_REV(a,b,c,d) _MM_SHUFFLE(d,c,b,a)
+//
+//// a b c d -> b c d a
+//FORCEINLINE fltx4 RotateLeft(const fltx4& a)
+//{
+//	return _mm_shuffle_ps(a, a, MM_SHUFFLE_REV(1, 2, 3, 0));
+//}
+//
+//FORCEINLINE FourVectors RotateLeft(const FourVectors& src)
+//{
+//	FourVectors ret;
+//	ret.x = RotateLeft(src.x);
+//	ret.y = RotateLeft(src.y);
+//	ret.z = RotateLeft(src.z);
+//	return ret;
+//}
+//
+//inline Vector CrossProduct(const Vector& a, const Vector& b)
+//{
+//	return Vector(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+//}

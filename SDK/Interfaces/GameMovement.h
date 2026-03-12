@@ -1,5 +1,7 @@
 #pragma once
 #include "../Classes/C_BaseEntity.h"
+#include "../../Utils/Memory.h"
+#include "CTrace.h"
 
 enum soundlevel_t
 {
@@ -103,8 +105,21 @@ public:
 	float			m_flConstraintSpeedFactor;
 	bool			m_bConstraintPastRadius;		///< If no, do no constraining past Radius.  If yes, cap them to SpeedFactor past radius
 
+	void			SetAbsOrigin(const Vector& vec);
+	const Vector& GetAbsOrigin() const;
+
 	Vector			m_vecAbsOrigin;		// edict::origin
 };
+
+inline const Vector& CMoveData::GetAbsOrigin() const
+{
+	return m_vecAbsOrigin;
+}
+
+inline void CMoveData::SetAbsOrigin(const Vector& vec)
+{
+	m_vecAbsOrigin = vec;
+}
 
 class IMoveHelper
 {
@@ -191,4 +206,78 @@ public:
 	virtual const Vector& GetPlayerMaxs(bool ducked) const = 0;
 	virtual const Vector& GetPlayerViewOffset(bool ducked) const = 0;
 	virtual void SetupMovementBounds(CMoveData* pMove) = 0;
+	virtual bool		IsMovingPlayerStuck(void) const = 0;
+	virtual CBasePlayer* GetMovingPlayer(void) const = 0;
+	virtual void		UnblockPusher(CBasePlayer* pPlayer, CBaseEntity* pPusher) = 0;
+
+	// For sanity checking getting stuck on CMoveData::SetAbsOrigin
+	//virtual void			TracePlayerBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm) = 0;
+
+	// wrapper around tracehull to allow tracelistdata optimizations
+	void			GameMovementTraceHull(const Vector& start, const Vector& end, const Vector& mins, const Vector& maxs, unsigned int fMask, ITraceFilter* pFilter, trace_t* pTrace);
+
+#define BRUSH_ONLY true
+	virtual unsigned int PlayerSolidMask2(bool brushOnly = false, CBasePlayer* testPlayer = NULL) const = 0;	///< returns the solid mask for the given player, so bots can have a more-restrictive set
+	CBasePlayer* player;
+	CMoveData* GetMoveData() { return mv; }
+	// Input/Output for this movement
+	CMoveData* mv;
+
+public:
+	void PlayerRoughLandingEffects(float fvol)
+	{
+		memory::Call<void>(this, 54, fvol);
+	}
+
+	unsigned int PlayerSolidMask(bool brushOnly = false, CBasePlayer* testPlayer = NULL)
+	{
+		return memory::Call<unsigned int>(this, 17, brushOnly, testPlayer);
+	}
+
+	void TracePlayerBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm)
+	{
+		memory::Call<void>(this, 16, std::ref(start), std::ref(end), fMask, collisionGroup, std::ref(pm));
+	}
+
 };
+
+
+//CSGO REALISATION
+inline int ClipVelocity(Vector& in, Vector& normal, Vector& out, float overbounce)
+{
+	float	backoff;
+	float	change;
+	float angle;
+	int		i, blocked;
+
+	angle = normal[2];
+
+	blocked = 0x00;         // Assume unblocked.
+	if (angle > 0)			// If the plane that is blocking us has a positive z component, then assume it's a floor.
+		blocked |= 0x01;	// 
+	if (!angle)				// If the plane has no Z, it is vertical (wall/step)
+		blocked |= 0x02;	// 
+
+
+	// Determine how far along plane to slide based on incoming direction.
+	backoff = DotProduct(in, normal) * overbounce;
+
+	for (i = 0; i < 3; i++)
+	{
+		change = normal[i] * backoff;
+		out[i] = in[i] - change;
+	}
+
+	// iterate once to make sure we aren't still moving through the plane
+	float adjust = DotProduct(out, normal);
+	if (adjust < 0.0f)
+	{
+		// min this against a small number (but no further from zero than -DIST_EPSILON) to account for crossing a plane with a near-parallel normal
+		adjust = MIN(adjust, -DIST_EPSILON);
+		out -= (normal * adjust);
+		//		Msg( "Adjustment = %lf\n", adjust );
+	}
+
+	// Return blocking flags.
+	return blocked;
+}

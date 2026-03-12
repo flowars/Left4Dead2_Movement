@@ -21,6 +21,12 @@ namespace Config {
 		inline bool ExtendedEdgeBugPaths = false;
 		inline int EdgeBugPaths = 2;
 		inline float EdgeBugAngle = 15.f;
+
+		inline bool bLAN = true;
+		inline bool bTryPlayerMove = false;
+		inline bool EdgeBugNoDamage = false;
+
+		inline float fAiraccelerate = 10.f;
 	}
 
 }

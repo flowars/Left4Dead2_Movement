@@ -9,6 +9,7 @@
 #include "../SDK/Interfaces/GameMovement.h"
 #include "../SDK/Interfaces/CPrediction.h"
 #include "../SDK/Interfaces/IConvar.h"
+#include "../SDK/Interfaces/CTrace.h"
 
 #include "../SDK/Classes/IClientState.h"
 #include "../SDK/Classes/CInput.h"
@@ -33,7 +34,13 @@ namespace interfaces
 	inline CPrediction* prediction = nullptr;
 	inline CGlobalVarsBase* globals = nullptr;
 	inline ICvar* cvar = nullptr;
+	inline IEngineTrace* trace = nullptr;
 	inline void* engine_sound = nullptr;
+
+	//server interfaces
+	inline CGameMovement* game_movement_server = nullptr;
+	inline IMoveHelper* move_helper_server = nullptr;
+	inline IEngineTrace* trace_server = nullptr;
 
 	//patterns
 	inline IClientState* client_state = nullptr;
