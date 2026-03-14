@@ -10,6 +10,11 @@
 #include "../SDK/Interfaces/CPrediction.h"
 #include "../SDK/Interfaces/IConvar.h"
 #include "../SDK/Interfaces/CTrace.h"
+#include "../SDK/Interfaces/IPanel.h"
+#include "../SDK/Interfaces/IEngineVGui.h"
+#include "../SDK/Interfaces/IPhysicsCollision.h"
+#include "../SDK/Interfaces/IVModelInfo.h"
+
 
 #include "../SDK/Classes/IClientState.h"
 #include "../SDK/Classes/CInput.h"
@@ -35,10 +40,14 @@ namespace interfaces
 	inline CGlobalVarsBase* globals = nullptr;
 	inline ICvar* cvar = nullptr;
 	inline IEngineTrace* trace = nullptr;
+	inline IPanel* panel = nullptr;
+	inline IEngineVGui* engineVGUI = nullptr;
+	inline IPhysicsCollision* physics_collision = nullptr;
+	inline IVModelInfo* model_info = nullptr;
 	inline void* engine_sound = nullptr;
 
 	//server interfaces
-	inline CGameMovement* game_movement_server = nullptr;
+	inline CGameMovementServer* game_movement_server = nullptr;
 	inline IMoveHelper* move_helper_server = nullptr;
 	inline IEngineTrace* trace_server = nullptr;
 

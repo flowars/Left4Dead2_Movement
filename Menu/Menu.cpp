@@ -60,5 +60,15 @@ void Menu::Render() noexcept
 		ImGui::SliderFloat("##AirAccelerate", &Config::Movements::fAiraccelerate, 0.f, 100.f);
 	}
 
+	ImGui::Separator();
+	ImGui::Text("Visuals");
+
+	ImGui::Checkbox("Enable Weather", &Config::Visuals::bWeather);
+	if (Config::Visuals::bWeather)
+	{
+		ImGui::Text("What type");
+		const char* weathertype[] = { "SnowFall", "Rain", "Ash", "Heavy Rain", "Bugs", "Smoke" };
+		ImGui::Combo("##weathertype", &Config::Visuals::iWeather, weathertype, IM_ARRAYSIZE(weathertype));
+	}
 	ImGui::End();
 }

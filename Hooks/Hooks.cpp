@@ -36,6 +36,47 @@ void Hooks::Setup()
 	else
 		std::cout << clr::green << ("EmitSound Hooked") << std::endl;
 
+	if (MH_CreateHook(memory::Get(interfaces::panel, 41), &Hooks::PaintTraverseHook,
+		reinterpret_cast<void**>(&Hooks::PaintTraverseOriginal))) throw std::runtime_error("Failed to Hook PaintTraverse");
+	else
+		std::cout << clr::green << ("PaintTraverse Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::Get(interfaces::client, 34), &Hooks::FrameStageHook,
+		reinterpret_cast<void**>(&Hooks::FrameStageOriginal))) throw std::runtime_error("Failed to Hook FrameStage");
+	else
+		std::cout << clr::green << ("FrameStage Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::Get(interfaces::model_info, 4), &Hooks::GetVCollideHook,
+		reinterpret_cast<void**>(&Hooks::GetVCollideOriginal))) throw std::runtime_error("Failed to Hook GetVCollide");
+	else
+		std::cout << clr::green << ("GetVCollide Hooked") << std::endl;
+
+	//GameMovement
+	/*if (MH_CreateHook(memory::Get(interfaces::game_movement, 52), &Hooks::ReduceTimersClient,
+		reinterpret_cast<void**>(&Hooks::ReduceTimersClientOriginal))) throw std::runtime_error("Failed to Hook ReduceTimers");
+	else
+		std::cout << clr::green << ("ReduceTimers Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::Get(interfaces::game_movement_server, 52), &Hooks::ReduceTimersServer,
+		reinterpret_cast<void**>(&Hooks::ReduceTimersServerOriginal))) throw std::runtime_error("Failed to Hook ReduceTimers(server)");
+	else
+		std::cout << clr::green << ("ReduceTimers(server) Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::Get(interfaces::game_movement, 50), &Hooks::CategorizePositionHook,
+		reinterpret_cast<void**>(&Hooks::CategorizePositionOriginal))) throw std::runtime_error("Failed to Hook CategorizePosition");
+	else
+		std::cout << clr::green << ("CategorizePosition Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::Get(interfaces::game_movement, 55), &Hooks::DuckClientHook,
+		reinterpret_cast<void**>(&Hooks::DuckClientOriginal))) throw std::runtime_error("Failed to Hook Duck");
+	else
+		std::cout << clr::green << ("Duck Hooked") << std::endl;
+
+	if (MH_CreateHook(memory::Get(interfaces::game_movement_server, 55), &Hooks::DuckServerHook,
+		reinterpret_cast<void**>(&Hooks::DuckServerOriginal))) throw std::runtime_error("Failed to Hook Duck(server)");
+	else
+		std::cout << clr::green << ("Duck(server) Hooked") << std::endl;*/
+
 	if (MH_CreateHook(memory::PatternScan("client.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 56 57 8B 43 0C 8B F1 8B 0D"), &Hooks::TryPlayerMoveClient,
 		reinterpret_cast<void**>(&Hooks::TryPlayerMoveClientOriginal))) throw std::runtime_error("Failed to Hook TryPlayerMove");
 	else

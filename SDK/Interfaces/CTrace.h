@@ -228,7 +228,7 @@ public:
 	short			physicsbone;		// physics bone hit by trace in studio
 	unsigned short	worldSurfaceIndex;	// Index of the msurface2_t, if applicable
 
-	C_BaseEntity* m_pEnt;
+	CBaseEntity* m_pEnt;
 
 	// NOTE: this member is overloaded.
 	// If hEnt points at the world entity, then this is the static prop index.
@@ -280,14 +280,20 @@ enum TraceType_t
 class ITraceFilter
 {
 public:
-	virtual bool ShouldHitEntity(IHandleEntity * pEntity, int contentsMask) = 0;
-	virtual TraceType_t	GetTraceType() const = 0;
+	virtual bool ShouldHitEntity(void* pEntity, int contentsMask) { return (pEntity != skip); };
+	virtual TraceType_t	GetTraceType() const { return TRACE_EVERYTHING; };
+
+	ITraceFilter() {};
+	ITraceFilter(CBaseEntity* ent) {
+		this->skip = ent;
+	}
+
+	const void* skip;
 };
 
 //-----------------------------------------------------------------------------
 // Classes are expected to inherit these + implement the ShouldHitEntity method
 //-----------------------------------------------------------------------------
-
 // This is the one most normal traces will inherit from
 class CTraceFilter : public ITraceFilter
 {
@@ -345,7 +351,6 @@ public:
 		return true;
 	}
 };
-
 
 enum DebugTraceCounterBehavior_t
 {

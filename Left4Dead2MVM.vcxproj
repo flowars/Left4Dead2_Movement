@@ -165,9 +165,14 @@
     <ClCompile Include="Features\Movement\Bhop.cpp" />
     <ClCompile Include="Features\Movement\EdgeBug.cpp" />
     <ClCompile Include="Features\Prediction\Prediction.cpp" />
+    <ClCompile Include="Features\Visuals\Weather.cpp" />
     <ClCompile Include="Hooks\Functions\CreateMove.cpp" />
     <ClCompile Include="Hooks\Functions\EmitSound.cpp" />
-    <ClCompile Include="Hooks\Functions\TryPlayerMove.cpp" />
+    <ClCompile Include="Hooks\Functions\FrameStage.cpp" />
+    <ClCompile Include="Hooks\Functions\GameMovement_Server.cpp" />
+    <ClCompile Include="Hooks\Functions\GetVCollide.cpp" />
+    <ClCompile Include="Hooks\Functions\PaintTraverse.cpp" />
+    <ClCompile Include="Hooks\Functions\GameMovement_Client.cpp" />
     <ClCompile Include="Hooks\Functions\LockCursor.cpp" />
     <ClCompile Include="Hooks\Functions\Present.cpp" />
     <ClCompile Include="Hooks\Functions\Reset.cpp" />
@@ -175,10 +180,13 @@
     <ClCompile Include="Menu\Menu.cpp" />
     <ClCompile Include="SDK\Classes\Checksum_CRC.cpp" />
     <ClCompile Include="SDK\Classes\Random.cpp" />
+    <ClCompile Include="SDK\Interfaces\CSGO_GameMovement.cpp" />
     <ClCompile Include="SDK\NetVars\NetVars.cpp" />
     <ClCompile Include="Utils\Colored_cout.cpp" />
     <ClCompile Include="Utils\Console.cpp" />
     <ClCompile Include="Utils\Memory.cpp" />
+    <ClCompile Include="Utils\Render\Draw.cpp" />
+    <ClCompile Include="Utils\Render\Structures.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Interfaces.h" />
@@ -259,9 +267,11 @@
     <ClInclude Include="Features\Misc\Misc.h" />
     <ClInclude Include="Features\Movement\Movement.h" />
     <ClInclude Include="Features\Prediction\Prediction.h" />
+    <ClInclude Include="Features\Visuals\Visuals.h" />
     <ClInclude Include="Hooks\Hooks.h" />
     <ClInclude Include="Menu\Config.h" />
     <ClInclude Include="Menu\Menu.h" />
+    <ClInclude Include="SDK\Classes\BaseHandle.h" />
     <ClInclude Include="SDK\Classes\BaseTypes.h" />
     <ClInclude Include="SDK\Classes\BitBuf.h" />
     <ClInclude Include="SDK\Classes\Checksum_CRC.h" />
@@ -285,17 +295,23 @@
     <ClInclude Include="SDK\Classes\Random.h" />
     <ClInclude Include="SDK\Classes\UtlMemory.h" />
     <ClInclude Include="SDK\Classes\UtlVector.h" />
+    <ClInclude Include="SDK\Classes\VCollide.h" />
     <ClInclude Include="SDK\Classes\Vector.h" />
     <ClInclude Include="SDK\Classes\Vector2D.h" />
     <ClInclude Include="SDK\Classes\CGlobalVarsBase.h" />
+    <ClInclude Include="SDK\Interfaces\CSGO_GameMovement.h" />
+    <ClInclude Include="SDK\Interfaces\IEngineVGui.h" />
+    <ClInclude Include="SDK\Interfaces\IPanel.h" />
     <ClInclude Include="SDK\Interfaces\CTrace.h" />
     <ClInclude Include="SDK\Interfaces\GameMovement.h" />
     <ClInclude Include="SDK\Interfaces\IBaseClientDLL.h" />
     <ClInclude Include="SDK\Interfaces\IClientEntityList.h" />
     <ClInclude Include="SDK\Interfaces\IConvar.h" />
     <ClInclude Include="SDK\Interfaces\IInputSystem.h" />
+    <ClInclude Include="SDK\Interfaces\IPhysicsCollision.h" />
     <ClInclude Include="SDK\Interfaces\ISurface.h" />
     <ClInclude Include="SDK\Interfaces\IVEngineClient.h" />
+    <ClInclude Include="SDK\Interfaces\IVModelInfo.h" />
     <ClInclude Include="SDK\Interfaces\IVModelRender.h" />
     <ClInclude Include="SDK\Interfaces\CPrediction.h" />
     <ClInclude Include="SDK\NetVars\DataMap.h" />
@@ -306,6 +322,8 @@
     <ClInclude Include="Utils\FNV.h" />
     <ClInclude Include="Utils\Math.h" />
     <ClInclude Include="Utils\Memory.h" />
+    <ClInclude Include="Utils\Render\Draw.h" />
+    <ClInclude Include="Utils\Render\Structures.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\ImGui\freetype\lib\dfreetype.lib" />

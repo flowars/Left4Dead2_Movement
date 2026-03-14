@@ -2,6 +2,17 @@
 #include "../Classes/C_BaseEntity.h"
 #include "../../Utils/Memory.h"
 #include "CTrace.h"
+#include "../Classes/BaseHandle.h"
+
+#define MINIMUM_MOVE_FRACTION			0.0001f
+#define EFFECTIVELY_HORIZONTAL_NORMAL_Z	0.0001f
+#define	STOP_EPSILON		0.1
+#define	MAX_CLIP_PLANES		5
+#define PLAYER_MAX_SAFE_FALL_SPEED	580 // approx 20 feet
+inline Vector vec3_origin = { 0.f, 0.f, 0.f };
+
+typedef CBaseHandle EntityHandle_t;
+#define INVALID_ENTITY_HANDLE INVALID_EHANDLE
 
 enum soundlevel_t
 {
@@ -223,6 +234,13 @@ public:
 	// Input/Output for this movement
 	CMoveData* mv;
 
+	int				m_nOldWaterLevel;
+	float			m_flWaterEntryTime;
+	int				m_nOnLadder;
+
+	Vector			m_vecForward;
+	Vector			m_vecRight;
+	Vector			m_vecUp;
 public:
 	void PlayerRoughLandingEffects(float fvol)
 	{
@@ -239,10 +257,126 @@ public:
 		memory::Call<void>(this, 16, std::ref(start), std::ref(end), fMask, collisionGroup, std::ref(pm));
 	}
 
+	void CategorizePosition(bool a3 = false)
+	{
+		using fn = void(__thiscall*)(void*, bool);
+		static fn CategorizePositionfn = (fn)memory::PatternScan("client.dll", "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC F3 0F 10 05 ? ? ? ? 56 8B F1 8B");
+		CategorizePositionfn(this, a3);
+	}
+
+	void CheckParameters()
+	{
+		memory::Call<void>(this, 51);
+	}
+
+	void SetDuckedEyeOffset(float duckFraction)
+	{
+		using fn = void(__thiscall*)(void*, float);
+		static fn SetDuckedEyeOffsetfn = (fn)memory::PatternScan("client.dll", "55 8B EC 83 EC 3C 56 8B F1 8B 46 04");
+		SetDuckedEyeOffsetfn(this, duckFraction);
+	}
+
+	void FixPlayerCrouchStuck(bool upward)
+	{
+		using fn = void(__thiscall*)(void*, bool);
+		static fn FixPlayerCrouchStuckfn = (fn)memory::PatternScan("client.dll", "55 8B EC 83 EC 78 A1 ? ? ? ? 33 C5 89 45 FC 33 C0 38 45 08 56 0F 95 C0");
+		FixPlayerCrouchStuckfn(this, upward);
+	}
+
+	virtual CBaseHandle	TestPlayerPosition(Vector* start, Vector& pos, int collisionGroup, trace_t& pm)
+	{
+		return memory::Call<CBaseHandle>(this, 61, start, std::ref(pos), collisionGroup, std::ref(pm));
+	}
+
 };
 
+class CGameMovementServer : public IGameMovement
+{
+public:
+	CGameMovementServer(void) {};
+	virtual			~CGameMovementServer(void) {};
 
-//CSGO REALISATION
+	virtual void	ProcessMovement(CBasePlayer* pPlayer, CMoveData* pMove) = 0;
+	virtual void	Reset(void) = 0;
+	virtual void	StartTrackPredictionErrors(CBasePlayer* pPlayer) = 0;
+	virtual void	FinishTrackPredictionErrors(CBasePlayer* pPlayer) = 0;
+	virtual void	DiffPrint(char const* fmt, ...) = 0;
+	virtual const Vector& GetPlayerMins(bool ducked) const = 0;
+	virtual const Vector& GetPlayerMaxs(bool ducked) const = 0;
+	virtual const Vector& GetPlayerViewOffset(bool ducked) const = 0;
+	virtual void SetupMovementBounds(CMoveData* pMove) = 0;
+	virtual bool		IsMovingPlayerStuck(void) const = 0;
+	virtual CBasePlayer* GetMovingPlayer(void) const = 0;
+	virtual void		UnblockPusher(CBasePlayer* pPlayer, CBaseEntity* pPusher) = 0;
+
+	// For sanity checking getting stuck on CMoveData::SetAbsOrigin
+	//virtual void			TracePlayerBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm) = 0;
+
+	// wrapper around tracehull to allow tracelistdata optimizations
+	void			GameMovementTraceHull(const Vector& start, const Vector& end, const Vector& mins, const Vector& maxs, unsigned int fMask, ITraceFilter* pFilter, trace_t* pTrace);
+
+#define BRUSH_ONLY true
+	virtual unsigned int PlayerSolidMask2(bool brushOnly = false, CBasePlayer* testPlayer = NULL) const = 0;	///< returns the solid mask for the given player, so bots can have a more-restrictive set
+	CPlayer_Server* player;
+	CMoveData* GetMoveData() { return mv; }
+	// Input/Output for this movement
+	CMoveData* mv;
+
+	int				m_nOldWaterLevel;
+	float			m_flWaterEntryTime;
+	int				m_nOnLadder;
+
+	Vector			m_vecForward;
+	Vector			m_vecRight;
+	Vector			m_vecUp;
+public:
+	void PlayerRoughLandingEffects(float fvol)
+	{
+		memory::Call<void>(this, 54, fvol);
+	}
+
+	unsigned int PlayerSolidMask(bool brushOnly = false, CBasePlayer* testPlayer = NULL)
+	{
+		return memory::Call<unsigned int>(this, 17, brushOnly, testPlayer);
+	}
+
+	void TracePlayerBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm)
+	{
+		memory::Call<void>(this, 16, std::ref(start), std::ref(end), fMask, collisionGroup, std::ref(pm));
+	}
+
+	void CategorizePosition(bool a3 = false)
+	{
+		using fn = void(__thiscall*)(void*, bool);
+		static fn CategorizePositionfn = (fn)memory::PatternScan("server.dll", "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC F3 0F 10 05 ? ? ? ? 56 8B F1 8B");
+		CategorizePositionfn(this, a3);
+	}
+
+	void CheckParameters()
+	{
+		memory::Call<void>(this, 51);
+	}
+
+	void SetDuckedEyeOffset(float duckFraction)
+	{
+		using fn = void(__thiscall*)(void*, float);
+		static fn SetDuckedEyeOffsetfn = (fn)memory::PatternScan("server.dll", "55 8B EC 83 EC 3C 56 8B F1 8B 4E 04");
+		SetDuckedEyeOffsetfn(this, duckFraction);
+	}
+
+	void FixPlayerCrouchStuck(bool upward)
+	{
+		using fn = void(__thiscall*)(void*, bool);
+		static fn FixPlayerCrouchStuckfn = (fn)memory::PatternScan("server.dll", "55 8B EC 83 EC 78 A1 ? ? ? ? 33 C5 89 45 FC 33 C0 38 45 08 56 0F 95 C0");
+		FixPlayerCrouchStuckfn(this, upward);
+	}
+
+	virtual CBaseHandle	TestPlayerPosition(Vector* start, Vector& pos, int collisionGroup, trace_t& pm)
+	{
+		return memory::Call<CBaseHandle>(this, 61, start, std::ref(pos), collisionGroup, std::ref(pm));
+	}
+};
+
 inline int ClipVelocity(Vector& in, Vector& normal, Vector& out, float overbounce)
 {
 	float	backoff;

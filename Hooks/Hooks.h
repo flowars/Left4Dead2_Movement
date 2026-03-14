@@ -36,37 +36,43 @@ namespace Hooks
 	inline LockCursorfn LockCursorOriginal;
 	void __fastcall LockCursorHook(ISurface* ecx);
 
-	using EmitSoundfn = void(__fastcall*)(void*, void*,
-		int,
-		int,
-		int,
-		int,
-		float,
-		int,
-		int,
-		int,
-		int,
-		int,
-		int,
-		int,
-		float,
-		int);
+	using EmitSoundfn = void(__fastcall*)(void*, void*, int, int, int, int, float, int, int, int, int, int, int, int, float, int);
 	inline EmitSoundfn EmitSoundOriginal;
-	void __fastcall EmitSoundHook(void* ecx, void* edx,
-		int a2,
-		int a3,
-		int a4,
-		int a5,
-		float a6,
-		int a7,
-		int a8,
-		int a9,
-		int a10,
-		int a11,
-		int a12,
-		int a13,
-		float a14,
-		int a15);
+	void __fastcall EmitSoundHook(void* ecx, void* edx, int a2, int a3, int a4, int a5, float a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, float a14, int a15);
+
+	using PaintTraversefn = void(__thiscall*)(IPanel*, unsigned int, bool, bool);
+	inline PaintTraversefn PaintTraverseOriginal;
+	void __stdcall PaintTraverseHook(unsigned int panel, bool force_repaint, bool allow_force);
+
+	using FrameStageFn = void(__fastcall*)(void*, void*, ClientFrameStage_t);
+	inline FrameStageFn FrameStageOriginal = nullptr;
+	void __fastcall FrameStageHook(void* ecx, void* edx, ClientFrameStage_t curStage);
+
+	using GetVCollidefn = void*(__fastcall*)(void*, void*, int);
+	inline GetVCollidefn GetVCollideOriginal;
+	void* __fastcall GetVCollideHook(void* ecx, void* edx, int model_index);
+
+	// GameMovement definition of functions
+
+	using ReduceTimersfn = void(__fastcall*)(void*);
+	inline ReduceTimersfn ReduceTimersClientOriginal;
+	void __fastcall ReduceTimersClient(void* ecx);
+
+	using ReduceTimersfn = void(__fastcall*)(void*);
+	inline ReduceTimersfn ReduceTimersServerOriginal;
+	void __fastcall ReduceTimersServer(void* ecx);
+
+	using Duckfn = void(__fastcall*)(void*);
+	inline Duckfn DuckClientOriginal;
+	void __fastcall DuckClientHook(void* ecx);
+
+	using Duckfn = void(__fastcall*)(void*);
+	inline Duckfn DuckServerOriginal;
+	void __fastcall DuckServerHook(void* ecx);
+
+	using CategorizePositionfn = void(__thiscall*)(void*, bool);
+	inline CategorizePositionfn CategorizePositionOriginal;
+	void __stdcall CategorizePositionHook(bool a3);
 
 	using TryPlayerMovefn = int(__fastcall*)(void*, void*, Vector*, trace_t*);
 	inline TryPlayerMovefn TryPlayerMoveClientOriginal;

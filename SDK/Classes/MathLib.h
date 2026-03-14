@@ -114,3 +114,4 @@ class ALIGN16 matrix3x4a_t : public matrix3x4_t
 	}
 	matrix3x4a_t() {}
 };
+

@@ -5,6 +5,7 @@
 class IClientEntity;
 class ClientClass;
 
+
 enum ShouldTransmitState_t
 {
 	SHOULDTRANSMIT_START = 0,	// The entity is starting to be transmitted (maybe it entered the PVS).
@@ -24,7 +25,6 @@ enum DataUpdateType_t
 	//	DATA_UPDATE_LEFT_PVS,
 	//	DATA_UPDATE_DESTROYED,		// FIXME: Could enable this, but it's a little worrying
 									// since it changes a bunch of existing code
-	DATA_UPDATE_POST_UPDATE,
 };
 
 class IClientNetworkable
@@ -76,8 +76,7 @@ public:
 	virtual int				entindex(void) const = 0;
 
 	// Server to client entity message received
-	//virtual void			ReceiveMessage(int classID, bf_read& msg) = 0;
-	virtual void			ReceiveMessage() = 0;
+	virtual void			ReceiveMessage(/*int classID, bf_read& msg*/) = 0;
 
 	// Get the base pointer to the networked data that GetClientClass->m_pRecvTable starts at.
 	// (This is usually just the "this" pointer).
@@ -86,4 +85,6 @@ public:
 	// Tells the entity that it's about to be destroyed due to the client receiving
 	// an uncompressed update that's caused it to destroy all entities & recreate them.
 	virtual void			SetDestroyedOnRecreateEntities(void) = 0;
+
+	virtual void			OnDataUnchangedInPVS() = 0;
 };

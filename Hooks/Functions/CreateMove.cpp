@@ -26,7 +26,7 @@ void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_fra
 		if (interfaces::engine->IsDedicatedServer())
 			Misc::Cvars();
 
-		printf("Position.z: %.2f(%p) \t Velocity.z: %.2f \t fallVelocity: %.2f \n", l4d2::local->m_vecOrigin().z, &l4d2::local->m_vecOrigin(), l4d2::local->m_vecVelocity().z, l4d2::local->m_flFallVelocity());
+		//printf("m_flStamina: %.2f \n", l4d2::local->m_flStamina());
 
 		Prediction::Begin(cmd);
 		{

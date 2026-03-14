@@ -185,6 +185,7 @@ public:
 		}
 		return l;
 	}
+
 };
 
 inline Vector::Vector(void)
@@ -761,6 +762,36 @@ public:
 //	}
 //#endif
 } ALIGN16_POST;
+
+inline Vector Approach(Vector target, Vector value, float speed)
+{
+	Vector diff = (target - value);
+	float delta = diff.Length();
+
+	if (delta > speed)
+		value += diff.Normalized() * speed;
+	else if (delta < -speed)
+		value -= diff.Normalized() * speed;
+	else
+		value = target;
+
+	return value;
+}
+
+inline float Approach(float target, float value, float speed)
+{
+	float delta = target - value;
+
+	if (delta > speed)
+		value += speed;
+	else if (delta < -speed)
+		value -= speed;
+	else
+		value = target;
+
+	return value;
+}
+
 
 //typedef __m128 fltx4;
 //typedef const fltx4& FLTX4;

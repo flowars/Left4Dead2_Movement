@@ -83,8 +83,9 @@ public:
 	virtual Vector const& GetRenderOrigin(void) = 0;
 	virtual Vector const& GetRenderAngles(void) = 0;
 	virtual bool					ShouldDraw(void) = 0;
-	virtual int					    GetRenderFlags(void) = 0; // ERENDERFLAGS_xxx
-	virtual void					Unused(void) const {}
+	virtual bool					IsTransparent(void) = 0;
+	virtual bool					UsesPowerOfTwoFrameBufferTexture() = 0;
+	virtual bool					UsesFullFrameBufferTexture() = 0;
 
 	virtual ClientShadowHandle_t	GetShadowHandle() const = 0;
 
@@ -93,10 +94,14 @@ public:
 
 	// Render baby!
 	virtual const model_t* GetModel() const = 0;
-	virtual int						DrawModel(int flags, const RenderableInstance_t& instance) = 0;
+	virtual int						DrawModel(int flags) = 0;
 
 	// Get the body parameter
 	virtual int		GetBody() = 0;
+
+	// Determine alpha and blend amount for transparent objects based on render state info
+	virtual void	ComputeFxBlend() = 0;
+	virtual int		GetFxBlend(void) = 0;
 
 	// Determine the color modulation amount
 	virtual void	GetColorModulation(float* color) = 0;
@@ -109,7 +114,7 @@ public:
 	// currentTime parameter will affect interpolation
 	// nMaxBones specifies how many matrices pBoneToWorldOut can hold. (Should be greater than or
 	// equal to studiohdr_t::numbones. Use MAXSTUDIOBONES to be safe.)
-	virtual bool	SetupBones(matrix3x4a_t* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime) = 0;
+	virtual bool	SetupBones(matrix3x4_t* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime) = 0;
 
 	virtual void	SetupWeights(const matrix3x4_t* pBoneToWorld, int nFlexWeightCount, float* pFlexWeights, float* pFlexDelayedWeights) = 0;
 	virtual void	DoAnimationEvents(void) = 0;
@@ -165,23 +170,16 @@ public:
 	// Get the skin parameter
 	virtual int		GetSkin() = 0;
 
+	// Is this a two-pass renderable?
+	virtual bool	IsTwoPass(void) = 0;
+
 	virtual void	OnThreadedDrawSetup() = 0;
 
 	virtual bool	UsesFlexDelayedWeights() = 0;
 
 	virtual void	RecordToolMessage() = 0;
-	virtual bool	ShouldDrawForSplitScreenUser(int nSlot) = 0;
 
-	// NOTE: This is used by renderables to override the default alpha modulation,
-	// not including fades, for a renderable. The alpha passed to the function
-	// is the alpha computed based on the current renderfx.
-	virtual uint8	OverrideAlphaModulation(uint8 nAlpha) = 0;
-
-	// NOTE: This is used by renderables to override the default alpha modulation,
-	// not including fades, for a renderable's shadow. The alpha passed to the function
-	// is the alpha computed based on the current renderfx + any override
-	// computed in OverrideAlphaModulation
-	virtual uint8	OverrideShadowAlphaModulation(uint8 nAlpha) = 0;
+	virtual bool	IgnoresZBuffer(void) const = 0;
 };
 
 enum RenderableLightingModel_t

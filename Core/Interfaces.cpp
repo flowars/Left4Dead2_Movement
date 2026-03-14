@@ -13,9 +13,13 @@ void interfaces::Setup()
 	cvar = Capture<ICvar>("vstdlib.dll", "VEngineCvar007");
 	engine_sound = Capture<void>("engine.dll", "IEngineSoundClient003");
 	trace = Capture<IEngineTrace>("engine.dll", "EngineTraceClient003");
+	panel = Capture<IPanel>("vgui2.dll", "VGUI_Panel009");
+	engineVGUI = Capture<IEngineVGui>("engine.dll", "VEngineVGui001");
+	physics_collision = Capture<IPhysicsCollision>("vphysics.dll", "VPhysicsCollision007");
+	model_info = Capture<IVModelInfo>("engine.dll", "VModelInfoClient004");
 
 	//server
-	game_movement_server = Capture<CGameMovement>("server.dll", "GameMovement001");
+	game_movement_server = Capture<CGameMovementServer>("server.dll", "GameMovement001");
 	move_helper_server = **reinterpret_cast<IMoveHelper***>(memory::PatternScan(("server.dll"), ("A1 ? ? ? ? 8B 10 8B 52 1C 81 C1 ? ? ? ? 68 ? ? ? ?")) + 1);
 	trace_server = Capture<IEngineTrace>("engine.dll", "IEngineSoundServer003");
 

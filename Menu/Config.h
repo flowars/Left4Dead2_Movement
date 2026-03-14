@@ -29,4 +29,10 @@ namespace Config {
 		inline float fAiraccelerate = 10.f;
 	}
 
+	namespace Visuals
+	{
+		inline bool bWeather = false;
+		inline int iWeather = 0;
+	}
+
 }
