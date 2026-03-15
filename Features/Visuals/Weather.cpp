@@ -26,7 +26,8 @@ void Visuals::Reset_Weather(const bool cleanup) {
         rain_entity->PostDataUpdate(DATA_UPDATE_CREATED);
 
         if (rain_entity->Networkable())
-            rain_entity->Release(0);
+            rain_entity->Release(1);
+
     }
 
     rain_entity = nullptr;

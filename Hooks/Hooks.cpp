@@ -51,6 +51,11 @@ void Hooks::Setup()
 	else
 		std::cout << clr::green << ("GetVCollide Hooked") << std::endl;
 
+	if (MH_CreateHook(memory::Get(interfaces::commandline, 10), &Hooks::FindParmHook,
+		reinterpret_cast<void**>(&Hooks::FindParmOriginal))) throw std::runtime_error("Failed to Hook FindParm");
+	else
+		std::cout << clr::green << ("FindParm Hooked") << std::endl;
+
 	//GameMovement
 	/*if (MH_CreateHook(memory::Get(interfaces::game_movement, 52), &Hooks::ReduceTimersClient,
 		reinterpret_cast<void**>(&Hooks::ReduceTimersClientOriginal))) throw std::runtime_error("Failed to Hook ReduceTimers");

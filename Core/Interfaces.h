@@ -45,6 +45,7 @@ namespace interfaces
 	inline IPhysicsCollision* physics_collision = nullptr;
 	inline IVModelInfo* model_info = nullptr;
 	inline void* engine_sound = nullptr;
+	inline void* commandline = nullptr;
 
 	//server interfaces
 	inline CGameMovementServer* game_movement_server = nullptr;

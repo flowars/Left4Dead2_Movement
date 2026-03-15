@@ -70,5 +70,10 @@ void Menu::Render() noexcept
 		const char* weathertype[] = { "SnowFall", "Rain", "Ash", "Heavy Rain", "Bugs", "Smoke" };
 		ImGui::Combo("##weathertype", &Config::Visuals::iWeather, weathertype, IM_ARRAYSIZE(weathertype));
 	}
+
+	ImGui::Separator();
+	ImGui::Text("Misc");
+	ImGui::Checkbox("Insecure Bypass", &Config::Misc::bInsecure);
+
 	ImGui::End();
 }

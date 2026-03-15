@@ -249,8 +249,8 @@ public:
 		using original_fn = void(__thiscall*)(void*, int);
 		return (*(original_fn**)Networkable())[6](Networkable(), update_type);
 	}
-	void Release(int a2) {
-		using original_fn = void(__thiscall*)(void*, int);
+	int Release(int a2) {
+		using original_fn = int(__thiscall*)(void*, int);
 		return (*(original_fn**)Networkable())[2](Networkable(), a2);
 	}
 

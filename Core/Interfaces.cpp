@@ -28,6 +28,7 @@ void interfaces::Setup()
 	input = **reinterpret_cast<CInput***>(memory::PatternScan("client.dll", "8B 0D ? ? ? ? 8B 11 8B 42 28 68 ? ? ? ?") + 2);
 	move_helper = **reinterpret_cast<IMoveHelper***>(memory::PatternScan(("client.dll"), ("A1 ? ? ? ? 8B 10 8B 52 1C 81 C1 ? ? ? ? 68 ? ? ? ?")) + 1);
 	globals = **reinterpret_cast<CGlobalVarsBase***>(memory::PatternScan(("client.dll"), ("8B 0D ? ? ? ? 89 35 ? ? ? ? 0F 57 C0 F3 0F 2A 86 ? ? ? ?")) + 2);
+	commandline = *reinterpret_cast<void**>(memory::PatternScan(("tier0.dll"), ("B8 ? ? ? ? C3")) + 1);
 }
 
 template <typename Interface>

@@ -35,4 +35,9 @@ namespace Config {
 		inline int iWeather = 0;
 	}
 
+	namespace Misc
+	{
+		inline bool bInsecure = false;
+	}
+
 }

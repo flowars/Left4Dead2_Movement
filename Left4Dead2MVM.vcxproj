@@ -171,6 +171,7 @@
     <ClCompile Include="Hooks\Functions\FrameStage.cpp" />
     <ClCompile Include="Hooks\Functions\GameMovement_Server.cpp" />
     <ClCompile Include="Hooks\Functions\GetVCollide.cpp" />
+    <ClCompile Include="Hooks\Functions\FindParm.cpp" />
     <ClCompile Include="Hooks\Functions\PaintTraverse.cpp" />
     <ClCompile Include="Hooks\Functions\GameMovement_Client.cpp" />
     <ClCompile Include="Hooks\Functions\LockCursor.cpp" />

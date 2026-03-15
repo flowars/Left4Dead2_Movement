@@ -52,6 +52,10 @@ namespace Hooks
 	inline GetVCollidefn GetVCollideOriginal;
 	void* __fastcall GetVCollideHook(void* ecx, void* edx, int model_index);
 
+	using FindParmFn = int(__thiscall*)(void*, const char*);
+	inline FindParmFn FindParmOriginal;
+	int __stdcall FindParmHook(const char* psz);
+
 	// GameMovement definition of functions
 
 	using ReduceTimersfn = void(__fastcall*)(void*);

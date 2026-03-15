@@ -144,6 +144,9 @@
     <ClCompile Include="Hooks\Functions\FrameStage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Hooks\Functions\FindParm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Console.h">
