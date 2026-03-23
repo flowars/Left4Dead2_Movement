@@ -20,6 +20,10 @@ void Hooks::Setup()
 	else
 		std::cout << clr::green << "Hooked Reset\n";
 
+	if (MH_CreateHook(memory::Get(interfaces::server_game, 9), &Hooks::GetTickInterval,
+		reinterpret_cast<void**>(&Hooks::GetTickIntervalOriginal))) throw std::runtime_error("Failed to Hook GetTickInterval");
+	else
+		std::cout << clr::green << ("GetTickInterval Hooked") << std::endl;
 
 	if (MH_CreateHook(memory::Get(interfaces::client, 20),&Hooks::CreateMoveHook,
 		reinterpret_cast<void**>(&Hooks::CreateMoveOriginal))) throw std::runtime_error("Failed to Hook CreateMove");

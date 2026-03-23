@@ -74,6 +74,8 @@ void Menu::Render() noexcept
 	ImGui::Separator();
 	ImGui::Text("Misc");
 	ImGui::Checkbox("Insecure Bypass", &Config::Misc::bInsecure);
+	ImGui::Text("TickRate");
+	ImGui::SliderInt("##TickRate", &Config::Misc::iTickRate, 0, 128);
 
 	ImGui::End();
 }

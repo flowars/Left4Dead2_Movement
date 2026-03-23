@@ -7,4 +7,5 @@
 namespace Misc
 {
 	void Cvars();
+	void TickRate();
 }

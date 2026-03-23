@@ -14,6 +14,7 @@ void __stdcall Hooks::CreateMoveHook(int sequence_number, float input_sample_fra
 
 	l4d2::local = reinterpret_cast<CBasePlayer*>(interfaces::entity_list->GetClientEntity(interfaces::engine->GetLocalPlayer()));
 	l4d2::cmd = cmd;
+	l4d2::half_gravity_per_tick = -(((interfaces::cvar->FindVar(("sv_gravity"))->GetFloat()) / 2) * interfaces::globals->interval_per_tick);
 
 	Vector SavedViewAngles = cmd->viewangles;
 

@@ -101,4 +101,8 @@ namespace Hooks
 	using CheckJumpButtonfn = bool(__fastcall*)(void*);
 	inline CheckJumpButtonfn CheckJumpButtonServerOriginal;
 	bool __fastcall CheckJumpButtonServer(void* ecx);
+
+	using GetTickIntervalfn = double(__fastcall*)();
+	inline GetTickIntervalfn GetTickIntervalOriginal;
+	double GetTickInterval();
 }

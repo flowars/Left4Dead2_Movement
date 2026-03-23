@@ -38,6 +38,7 @@ namespace Config {
 	namespace Misc
 	{
 		inline bool bInsecure = false;
+		inline int iTickRate = 128;
 	}
 
 }

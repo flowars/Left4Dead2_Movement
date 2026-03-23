@@ -171,6 +171,7 @@
     <ClCompile Include="Hooks\Functions\FrameStage.cpp" />
     <ClCompile Include="Hooks\Functions\GameMovement_Client.cpp" />
     <ClCompile Include="Hooks\Functions\GameMovement_Server.cpp" />
+    <ClCompile Include="Hooks\Functions\GetTickInterval.cpp" />
     <ClCompile Include="Hooks\Functions\GetVCollide.cpp" />
     <ClCompile Include="Hooks\Functions\FindParm.cpp" />
     <ClCompile Include="Hooks\Functions\PaintTraverse.cpp" />
@@ -305,6 +306,7 @@
     <ClInclude Include="SDK\Classes\Vector.h" />
     <ClInclude Include="SDK\Classes\Vector2D.h" />
     <ClInclude Include="SDK\Classes\CGlobalVarsBase.h" />
+    <ClInclude Include="SDK\Interfaces\CServerGameDLL.h" />
     <ClInclude Include="SDK\Interfaces\IEngineVGui.h" />
     <ClInclude Include="SDK\Interfaces\IPanel.h" />
     <ClInclude Include="SDK\Interfaces\CTrace.h" />

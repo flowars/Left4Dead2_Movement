@@ -147,6 +147,9 @@
     <ClCompile Include="Hooks\Functions\GameMovement_Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Hooks\Functions\GetTickInterval.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Console.h">
@@ -567,6 +570,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SDK\Interfaces\PhysicsSurfaceProps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Interfaces\CServerGameDLL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

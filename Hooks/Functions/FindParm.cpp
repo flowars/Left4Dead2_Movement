@@ -20,5 +20,7 @@ int __stdcall Hooks::FindParmHook(const char* psz)
 		allow = Config::Misc::bInsecure;
 	}
 
+	Misc::TickRate();
+
 	return Hooks::FindParmOriginal(interfaces::commandline, psz);
 }

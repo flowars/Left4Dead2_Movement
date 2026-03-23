@@ -8,6 +8,7 @@ namespace l4d2
 {
 	inline CBasePlayer* local = nullptr;
 	inline CUserCmd* cmd = nullptr;
+	inline float half_gravity_per_tick = 0.f;
 }
 
 namespace Menu {
