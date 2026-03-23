@@ -85,4 +85,20 @@ namespace Hooks
 	using TryPlayerMovefn = int(__fastcall*)(void*, void*, Vector*, trace_t*);
 	inline TryPlayerMovefn TryPlayerMoveServerOriginal;
 	int __fastcall TryPlayerMoveServer(void* ecx, void* ebp, Vector* pFirstDest, trace_t* pFirstTrace);
+
+	using PlayerMovefn = void(__fastcall*)(void*);
+	inline PlayerMovefn PlayerMoveOriginal;
+	void __fastcall PlayerMoveClient(void* ecx);
+
+	using PlayerMovefn = void(__fastcall*)(void*);
+	inline PlayerMovefn PlayerMoveServerOriginal;
+	void __fastcall PlayerMoveServer(void* ecx);
+
+	using CheckJumpButtonfn = bool(__fastcall*)(void*);
+	inline CheckJumpButtonfn CheckJumpButtonOriginal;
+	bool __fastcall CheckJumpButton(void* ecx);
+
+	using CheckJumpButtonfn = bool(__fastcall*)(void*);
+	inline CheckJumpButtonfn CheckJumpButtonServerOriginal;
+	bool __fastcall CheckJumpButtonServer(void* ecx);
 }

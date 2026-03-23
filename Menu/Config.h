@@ -23,7 +23,7 @@ namespace Config {
 		inline float EdgeBugAngle = 15.f;
 
 		inline bool bLAN = true;
-		inline bool bTryPlayerMove = false;
+		inline bool bCSGameMovement = false;
 		inline bool EdgeBugNoDamage = false;
 
 		inline float fAiraccelerate = 10.f;

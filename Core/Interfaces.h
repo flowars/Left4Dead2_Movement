@@ -19,6 +19,7 @@
 #include "../SDK/Classes/IClientState.h"
 #include "../SDK/Classes/CInput.h"
 #include "../SDK/Classes/CGlobalVarsBase.h"
+#include "../SDK/Classes/CGameRules.h"
 
 #include "../Utils/Memory.h"
 
@@ -51,6 +52,7 @@ namespace interfaces
 	inline CGameMovementServer* game_movement_server = nullptr;
 	inline IMoveHelper* move_helper_server = nullptr;
 	inline IEngineTrace* trace_server = nullptr;
+	inline CGameRules* game_rules = nullptr;
 
 	//patterns
 	inline IClientState* client_state = nullptr;

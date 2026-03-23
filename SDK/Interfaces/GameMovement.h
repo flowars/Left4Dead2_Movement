@@ -9,7 +9,20 @@
 #define	STOP_EPSILON		0.1
 #define	MAX_CLIP_PLANES		5
 #define PLAYER_MAX_SAFE_FALL_SPEED	580 // approx 20 feet
+#define GAMEMOVEMENT_DUCK_TIME				1000.0f		// ms
+#define GAMEMOVEMENT_JUMP_TIME				510.0f		// ms approx - based on the 21 unit height jump
+#define GAMEMOVEMENT_JUMP_HEIGHT			21.0f		// units
+#define GAMEMOVEMENT_TIME_TO_UNDUCK			( TIME_TO_UNDUCK * 1000.0f )		// ms
+#define GAMEMOVEMENT_TIME_TO_UNDUCK_INV		( GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK )
+
 inline Vector vec3_origin = { 0.f, 0.f, 0.f };
+
+typedef enum
+{
+	GROUND = 0,
+	STUCK,
+	LADDER
+} IntervalType_t;
 
 typedef CBaseHandle EntityHandle_t;
 #define INVALID_ENTITY_HANDLE INVALID_EHANDLE
@@ -242,9 +255,53 @@ public:
 	Vector			m_vecRight;
 	Vector			m_vecUp;
 public:
+
+	OFFSET(bool, m_duckUntilOnGround, 0x18AC)
+	OFFSET(int, m_iSpeedCropped, 0x1D3)
+
+	bool LadderMove()
+	{
+		return memory::Call<bool>(this, 41);
+	}
+
+	void ReduceTimers()
+	{
+		memory::Call<void>(this, 52);
+	}
+
+	void HandleDuckingSpeedCrop()
+	{
+		memory::Call<void>(this, 56);
+	}
+
+	void FinishUnDuck()
+	{
+		memory::Call<void>(this, 57);
+	}
+
+	void FinishDuck()
+	{
+		memory::Call<void>(this, 58);
+	}
+
+	bool CanUnduck()
+	{
+		return memory::Call<bool>(this, 59);
+	}
+
 	void PlayerRoughLandingEffects(float fvol)
 	{
 		memory::Call<void>(this, 54, fvol);
+	}
+
+	void Duck()
+	{
+		memory::Call<void>(this, 55);
+	}
+
+	void SetGroundEntity(trace_t* pm)
+	{
+		memory::Call<void>(this, 63, pm);
 	}
 
 	unsigned int PlayerSolidMask(bool brushOnly = false, CBasePlayer* testPlayer = NULL)
@@ -264,28 +321,84 @@ public:
 		CategorizePositionfn(this, a3);
 	}
 
+	bool CheckInterval(IntervalType_t type)
+	{
+		using fn = bool(__thiscall*)(void*, IntervalType_t);
+		static fn CategorizePositionfn = (fn)memory::PatternScan("client.dll", "55 8B EC 53 56 8B F1 8B 4D 08 8B 06 8B 90 ? ? ? ? 51 8B CE FF D2 80 3D ? ? ? ? ? 8B D8");
+		return CategorizePositionfn(this, type);
+	}
+
+	int CheckStuck()
+	{
+		using fn = int(__thiscall*)(void*);
+		static fn CategorizePositionfn = (fn)memory::PatternScan("client.dll", "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC A1 ? ? ? ? 53 56 8B F1 33 C9 89 8D ? ? ? ? 89 8D ? ? ? ? 57");
+		return CategorizePositionfn(this);
+	}
+
+	void FinishGravity()
+	{
+		using fn = void(__thiscall*)(void*);
+		static fn FinishGravityfn = (fn)memory::PatternScan("client.dll", "8B 51 04 F3 0F 10 82 ? ? ? ? 0F 57 C9 0F 2E C1 9F F6 C4 44 7A 51 F3 0F 10 82 ? ? ? ? 0F 2E C1 9F F6 C4 44 7A 08 F3 0F 10 05 ? ? ? ?");
+		FinishGravityfn(this);
+	}
+
 	void CheckParameters()
 	{
 		memory::Call<void>(this, 51);
 	}
 
-	void SetDuckedEyeOffset(float duckFraction)
+	void PlaySwimSound()
 	{
-		using fn = void(__thiscall*)(void*, float);
+		memory::Call<void>(this, 62);
+	}
+
+	int SetDuckedEyeOffset(float duckFraction)
+	{
+		using fn = int(__thiscall*)(void*, float);
 		static fn SetDuckedEyeOffsetfn = (fn)memory::PatternScan("client.dll", "55 8B EC 83 EC 3C 56 8B F1 8B 46 04");
-		SetDuckedEyeOffsetfn(this, duckFraction);
+		return SetDuckedEyeOffsetfn(this, duckFraction);
 	}
 
 	void FixPlayerCrouchStuck(bool upward)
 	{
 		using fn = void(__thiscall*)(void*, bool);
-		static fn FixPlayerCrouchStuckfn = (fn)memory::PatternScan("client.dll", "55 8B EC 83 EC 78 A1 ? ? ? ? 33 C5 89 45 FC 33 C0 38 45 08 56 0F 95 C0");
+		static fn FixPlayerCrouchStuckfn = (fn)memory::PatternScan("client.dll", "55 8B EC 83 EC 78 A1 ? ? ? ? 33 C5 89 45 FC 33 C0 38 45 08 56 0F 95 C0 57 8B F1 8B 16 8B 92 ? ? ? ? 8D 4D A8 51 8B F8 8B 46 08 05 ? ? ? ? 6A 08 50 8D 45 A4 50 8B CE FF D2");
 		FixPlayerCrouchStuckfn(this, upward);
 	}
 
 	virtual CBaseHandle	TestPlayerPosition(Vector* start, Vector& pos, int collisionGroup, trace_t& pm)
 	{
 		return memory::Call<CBaseHandle>(this, 61, start, std::ref(pos), collisionGroup, std::ref(pm));
+	}
+
+	void FullNoClipMove(float factor, float maxacceleration)
+	{
+		using fn = void(__thiscall*)(void*, float, float);
+		static fn FullNoClipMovefn = (fn)memory::PatternScan("client.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 83 EC 5C A1 ? ? ? ? F3 0F 10 40 ? F3 0F 59 43 ? 56");
+		FullNoClipMovefn(this, factor, maxacceleration);
+	}
+
+	void FullTossMove()
+	{
+		memory::Call<void>(this, 35);
+	}
+	void FullLadderMove()
+	{
+		memory::Call<void>(this, 36);
+	}
+	void Eleven()
+	{
+		memory::Call<void>(this, 37);
+	}
+	void FullWalkMove()
+	{
+		memory::Call<void>(this, 30);
+	}
+	void FullObserverMove()
+	{
+		using fn = void(__thiscall*)(void*);
+		static fn FullObserverMovefn = (fn)memory::PatternScan("client.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 83 EC 58 56 57 8B F9 8B 4F 04");
+		FullObserverMovefn(this);
 	}
 
 };
@@ -330,9 +443,52 @@ public:
 	Vector			m_vecRight;
 	Vector			m_vecUp;
 public:
+	OFFSET(bool, m_duckUntilOnGround, 0x28A4)
+	OFFSET(int, m_iSpeedCropped, 0x1F4)
+
+	bool LadderMove()
+	{
+		return memory::Call<bool>(this, 41);
+	}
+
+	void ReduceTimers()
+	{
+		memory::Call<void>(this, 52);
+	}
+
+	void HandleDuckingSpeedCrop()
+	{
+		memory::Call<void>(this, 56);
+	}
+
+	void FinishUnDuck()
+	{
+		memory::Call<void>(this, 57);
+	}
+
+	void FinishDuck()
+	{
+		memory::Call<void>(this, 58);
+	}
+
+	bool CanUnduck()
+	{
+		return memory::Call<bool>(this, 59);
+	}
+
 	void PlayerRoughLandingEffects(float fvol)
 	{
 		memory::Call<void>(this, 54, fvol);
+	}
+
+	void Duck()
+	{
+		memory::Call<void>(this, 55);
+	}
+
+	void SetGroundEntity(trace_t* pm)
+	{
+		memory::Call<void>(this, 63, pm);
 	}
 
 	unsigned int PlayerSolidMask(bool brushOnly = false, CBasePlayer* testPlayer = NULL)
@@ -352,9 +508,28 @@ public:
 		CategorizePositionfn(this, a3);
 	}
 
+	bool CheckInterval(IntervalType_t type)
+	{
+		using fn = bool(__thiscall*)(void*, IntervalType_t);
+		static fn CategorizePositionfn = (fn)memory::PatternScan("server.dll", "55 8B EC 56 8B F1 8B 4D 08 8B 06 8B 90 ? ? ? ? 57 51 8B CE FF D2 80 3D ? ? ? ? ? 8B F8");
+		return CategorizePositionfn(this, type);
+	}
+
+	int CheckStuck()
+	{
+		using fn = int(__thiscall*)(void*);
+		static fn CategorizePositionfn = (fn)memory::PatternScan("server.dll", "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC A1 ? ? ? ? 53 56 57 33 FF 89 BD ? ? ? ? 89 BD");
+		return CategorizePositionfn(this);
+	}
+
 	void CheckParameters()
 	{
 		memory::Call<void>(this, 51);
+	}
+
+	void PlaySwimSound()
+	{
+		memory::Call<void>(this, 62);
 	}
 
 	void SetDuckedEyeOffset(float duckFraction)
@@ -367,13 +542,54 @@ public:
 	void FixPlayerCrouchStuck(bool upward)
 	{
 		using fn = void(__thiscall*)(void*, bool);
-		static fn FixPlayerCrouchStuckfn = (fn)memory::PatternScan("server.dll", "55 8B EC 83 EC 78 A1 ? ? ? ? 33 C5 89 45 FC 33 C0 38 45 08 56 0F 95 C0");
-		FixPlayerCrouchStuckfn(this, upward);
+		static fn FixPlayerCrouchStuckfn = (fn)memory::PatternScan("server.dll", "55 8B EC 83 EC 78 A1 ? ? ? ? 33 C5 89 45 FC 33 C0 38 45 08 56 0F 95 C0 57 8B F1 8B 16 8B 92 ? ? ? ? 8D 4D A8 51 8B F8 8B 46 08 05 ? ? ? ? 6A 08 50 8D 45 A4 50 8B CE FF D2");
+		return FixPlayerCrouchStuckfn(this, upward);
 	}
 
 	virtual CBaseHandle	TestPlayerPosition(Vector* start, Vector& pos, int collisionGroup, trace_t& pm)
 	{
 		return memory::Call<CBaseHandle>(this, 61, start, std::ref(pos), collisionGroup, std::ref(pm));
+	}
+
+	void FullNoClipMove(float factor, float maxacceleration)
+	{
+		using fn = void(__thiscall*)(void*, float, float);
+		static fn FullNoClipMovefn = (fn)memory::PatternScan("server.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 83 EC 5C A1 ? ? ? ? F3 0F 10 40 ? F3 0F 59 43 ? 56 8B F1");
+		FullNoClipMovefn(this, factor, maxacceleration);
+	}
+
+	void FinishGravity()
+	{
+		using fn = void(__thiscall*)(void*);
+		static fn FinishGravityfn = (fn)memory::PatternScan("server.dll", "8B 51 04 F3 0F 10 82 ? ? ? ? 0F 57 C9 0F 2E C1 9F F6 C4 44 7A 51 F3 0F 10 82 ? ? ? ? 0F 2E C1 9F F6 C4 44 7A 08 F3 0F 10 05 ? ? ? ?");
+		FinishGravityfn(this);
+	}
+
+	void FullTossMove()
+	{
+		memory::Call<void>(this, 35);
+	}
+
+	void FullLadderMove()
+	{
+		memory::Call<void>(this, 36);
+	}
+
+	void Eleven()
+	{
+		memory::Call<void>(this, 37);
+	}
+
+	void FullWalkMove()
+	{
+		memory::Call<void>(this, 30);
+	}
+
+	void FullObserverMove()
+	{
+		using fn = void(__thiscall*)(void*);
+		static fn FullObserverMovefn = (fn)memory::PatternScan("server.dll", "53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 83 EC 58 56 57 8B F9 8B 4F 04");
+		FullObserverMovefn(this);
 	}
 };
 

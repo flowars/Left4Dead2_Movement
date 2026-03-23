@@ -97,3 +97,7 @@ namespace netvar_manager {
 #define OFFSET( type, var, offset ) type& var() { \
     return *( type* )( uintptr_t( this ) + offset ); \
 }
+
+#define OFFSET_PTR( type, var, offset ) type* var() { \
+    return ( type* )( uintptr_t( this ) + offset ); \
+}

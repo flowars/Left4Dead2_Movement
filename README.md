@@ -9,7 +9,7 @@
     - MiniJump(useless for this game)
     - Edgebug (Delusional)
 + LAN (Only Dedicated server)
-    - TryPlayerMove like CSGO (You can pixelsurf)
+    - GameMovement like in Counter-Strike games (You can finally ducking when you in the Air, and also can pixelsurf)
     - Reset FallDamage after EdgeBug like in CSGO
 + Visuals
     - Weather (Broken)

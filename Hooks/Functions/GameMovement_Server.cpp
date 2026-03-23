@@ -1,6 +1,7 @@
 #include "../Hooks.h"
 #include "../../SDK/Interfaces/GameMovement.h"
-#include "../../SDK/Interfaces/CSGO_GameMovement.h"
+#include "../../SDK/Classes/GameMovement_CS.h"
+#include "../../Utils/Math.h"
 
 using namespace interfaces;
 
@@ -18,255 +19,456 @@ void __fastcall Hooks::ReduceTimersServer(void* ecx)
 	Hooks::ReduceTimersServerOriginal(game_movement_server);
 }
 
+void __fastcall Hooks::PlayerMoveServer(void* ecx)
+{
+	game_movement_server->CheckParameters();
+
+	// clear output applied velocity
+	game_movement_server->mv->m_outWishVel.Init();
+	game_movement_server->mv->m_outJumpVel.Init();
+
+	move_helper_server->ResetTouchList();                    // Assume we don't touch anything
+
+	game_movement_server->ReduceTimers();
+
+	Math::AngleVectors(game_movement_server->mv->m_vecViewAngles, &game_movement_server->m_vecForward, &game_movement_server->m_vecRight, &game_movement_server->m_vecUp);  // Determine movement angles
+
+	// Always try and unstick us unless we are using a couple of the movement modes
+	if (game_movement_server->player->m_MoveType() != MOVETYPE_NOCLIP &&
+		game_movement_server->player->m_MoveType() != MOVETYPE_NONE &&
+		game_movement_server->player->m_MoveType() != MOVETYPE_ISOMETRIC &&
+		game_movement_server->player->m_MoveType() != MOVETYPE_OBSERVER &&
+		!game_movement_server->player->IsAlive())
+	{
+		if (game_movement_server->CheckInterval(STUCK))
+		{
+			if (game_movement_server->CheckStuck())
+			{
+				// Can't move, we're stuck
+				return;
+			}
+		}
+	}
+
+	// Now that we are "unstuck", see where we are (game_movement_server->player->m_nWaterLevel() and type, game_movement_server->player->GetGroundEntity()).
+	if (game_movement_server->player->m_MoveType() != MOVETYPE_WALK ||
+		game_movement_server->mv->m_bGameCodeMovedPlayer)
+	{
+		game_movement_server->CategorizePosition();
+	}
+	else
+	{
+		if (game_movement_server->mv->m_vecVelocity.z > 250.0f)
+		{
+			game_movement_server->SetGroundEntity(NULL);
+		}
+	}
+
+	// Store off the starting water level
+	game_movement_server->m_nOldWaterLevel = (int)game_movement_server->player->m_nWaterLevel();
+
+	// If we are not on ground, store off how fast we are moving down
+	if (game_movement_server->player->GetGroundEntity() == NULL)
+	{
+		game_movement_server->player->m_Local().m_flFallVelocity = -game_movement_server->mv->m_vecVelocity[2];
+	}
+
+	game_movement_server->m_nOnLadder = 0;
+
+	//game_movement_server->player->UpdateStepSound(game_movement_server->player->m_pSurfaceData, mv->GetAbsOrigin(), mv->m_vecVelocity);
+
+	cs_gamemovement.UpdateDuckJumpEyeOffset(true);
+	game_movement_server->Duck();
+
+	// Don't run ladder code if dead on on a train
+	if (!game_movement_server->player->IsAlive() && !(game_movement_server->player->m_fFlags() & FL_ONTRAIN))
+	{
+		// If was not on a ladder now, but was on one before, 
+		//  get off of the ladder
+
+		// TODO: this causes lots of weirdness.
+		//bool bCheckLadder = CheckInterval( LADDER );
+		//if ( bCheckLadder || game_movement_server->player->m_MoveType() == MOVETYPE_LADDER )
+		{
+			if (!game_movement_server->LadderMove() &&
+				(game_movement_server->player->m_MoveType() == MOVETYPE_LADDER))
+			{
+				// Clear ladder stuff unless player is dead or riding a train
+				// It will be reset immediately again next frame if necessary
+				game_movement_server->player->SetMoveType(MOVETYPE_WALK, MOVECOLLIDE_DEFAULT);
+				game_movement_server->player->SetMoveCollide(MOVECOLLIDE_DEFAULT);
+			}
+		}
+	}
+
+	// Handle movement modes.
+	switch (game_movement_server->player->m_MoveType())
+	{
+	case MOVETYPE_NONE:
+		break;
+
+	case MOVETYPE_NOCLIP:
+		game_movement_server->FullNoClipMove(interfaces::cvar->FindVar("sv_noclipspeed")->GetFloat(), interfaces::cvar->FindVar("sv_noclipaccelerate")->GetFloat());
+		break;
+
+	case MOVETYPE_FLY:
+	case MOVETYPE_FLYGRAVITY:
+		game_movement_server->FullTossMove();
+		break;
+
+	case MOVETYPE_LADDER:
+		game_movement_server->FullLadderMove();
+		break;
+
+	case MOVETYPE_WALK:
+		game_movement_server->FullWalkMove();
+		break;
+
+	case MOVETYPE_ISOMETRIC:
+		//IsometricMove();
+		// Could also try:  FullTossMove();
+		game_movement_server->FullWalkMove();
+		break;
+
+	case MOVETYPE_OBSERVER:
+		game_movement_server->FullObserverMove(); // clips against world&players
+		break;
+	case MOVETYPE_CUSTOM:
+		game_movement_server->Eleven();		   //specific movetype - idk i don't play l4d2
+		break;
+	default:
+		//DevMsg(1, "Bogus pmove player movetype %i on (%i) 0=cl 1=sv\n", game_movement_server->player->m_MoveType(), game_movement_server->player->IsServer());
+		break;
+	}
+
+	//Hooks::PlayerMoveServerOriginal(ecx);
+}
+
 void __fastcall Hooks::DuckServerHook(void* ecx)
 {
-	//static bool m_duckUntilOnGround_s;
+	if (!Config::Movements::bCSGameMovement || !engine->IsDedicatedServer())
+		return Hooks::DuckServerOriginal(ecx);
 
-	//const bool playerTouchingGround = game_movement_server->player->m_hGroundEntity() != NULL;
+	static float m_fTimeLastUnducked = 0.f;
+	// Fix taken from zblock for rapid crouch/stand not showing stand on other clients
 
-	//// Check to see if we are in the air.
-	//const bool bInAir = !playerTouchingGround && game_movement_server->player->m_MoveType() != MOVETYPE_LADDER;
+	if (game_movement_server->player->m_fFlags() & FL_ONGROUND)
+	{
+		// if prevent crouch
+		if (!(game_movement_server->mv->m_nButtons & IN_DUCK) && (game_movement_server->mv->m_nOldButtons & IN_DUCK))
+		{
+			// Player has released crouch and moving to standing
+			m_fTimeLastUnducked = interfaces::globals->curtime;
+		}
+		else if ((game_movement_server->mv->m_nButtons & IN_DUCK) && !(game_movement_server->mv->m_nOldButtons & IN_DUCK))
+		{
+			// Crouch from standing
+			if ((game_movement_server->player->m_fFlags() & FL_DUCKING)
+				&& (m_fTimeLastUnducked > (interfaces::globals->curtime - 0.f)))
+			{
+				// if the server thinks the player is still crouched
+				// AND the time the player started to stand (from being ducked) was less than 300ms ago
+				// prevent the player from ducking again
+				game_movement_server->mv->m_nButtons &= ~IN_DUCK;
+			}
+		}
+	}
 
-	//if (game_movement_server->mv->m_nButtons & IN_DUCK)
+	int buttonsChanged = (game_movement_server->mv->m_nOldButtons ^ game_movement_server->mv->m_nButtons);	// These buttons have changed this frame
+	int buttonsPressed = buttonsChanged & game_movement_server->mv->m_nButtons;			// The changed ones still down are "pressed"
+	int buttonsReleased = buttonsChanged & game_movement_server->mv->m_nOldButtons;		// The changed ones which were previously down are "released"
+
+	// Check to see if we are in the air.
+	bool bInAir = game_movement_server->player->GetGroundEntity() == NULL && game_movement_server->player->m_MoveType() != MOVETYPE_LADDER;
+
+	if (game_movement_server->mv->m_nButtons & IN_DUCK)
+	{
+		game_movement_server->mv->m_nOldButtons |= IN_DUCK;
+	}
+	else
+	{
+		game_movement_server->mv->m_nOldButtons &= ~IN_DUCK;
+	}
+
+	if (!game_movement_server->player->IsAlive())
+	{
+		// Unduck
+		if (game_movement_server->player->m_fFlags() & FL_DUCKING)
+		{
+			game_movement_server->FinishUnDuck();
+		}
+		return;
+	}
+
+	cs_gamemovement.HandleDuckingSpeedCrop(true);
+
+	if (game_movement_server->m_duckUntilOnGround())
+	{
+		if (!bInAir)
+		{
+			game_movement_server->m_duckUntilOnGround() = false;
+			if (game_movement_server->CanUnduck())
+			{
+				game_movement_server->FinishUnDuck();
+			}
+			return;
+		}
+		else
+		{
+			if (game_movement_server->mv->m_vecVelocity.z > 0.0f)
+				return;
+
+			// Check if we can un-duck.  We want to unduck if we have space for the standing hull, and
+			// if it is less than 2 inches off the ground.
+			trace_t trace;
+			Vector newOrigin;
+			Vector groundCheck;
+
+			VectorCopy(game_movement_server->mv->GetAbsOrigin(), newOrigin);
+			Vector hullSizeNormal = VEC_HULL_MAX_SCALED(game_movement_server->player) - VEC_HULL_MIN_SCALED(game_movement_server->player);
+			Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED(game_movement_server->player) - VEC_DUCK_HULL_MIN_SCALED(game_movement_server->player);
+			newOrigin -= (hullSizeNormal - hullSizeCrouch);
+			groundCheck = newOrigin;
+			groundCheck.z -= game_movement_server->player->m_flStepSize();
+
+			UTIL_TraceHull(newOrigin, groundCheck, VEC_HULL_MIN_SCALED(game_movement_server->player), VEC_HULL_MAX_SCALED(game_movement_server->player), MASK_PLAYERSOLID, game_movement_server->player, COLLISION_GROUP_PLAYER_MOVEMENT, &trace, false);
+
+			if (trace.startsolid || trace.fraction == 1.0f)
+				return; // Can't even stand up, or there's no ground underneath us
+
+			game_movement_server->m_duckUntilOnGround() = false;
+			if (game_movement_server->CanUnduck())
+			{
+				game_movement_server->FinishUnDuck();
+			}
+			return;
+		}
+	}
+//	printf("game_movement_server->player->m_fFlags(): %d \n", game_movement_server->player->m_fFlags());
+	// Holding duck, in process of ducking or fully ducked?
+	if ((game_movement_server->mv->m_nButtons & IN_DUCK) || (game_movement_server->player->m_Local().m_bDucking) || (game_movement_server->player->m_fFlags() & FL_DUCKING))
+	{
+		if (game_movement_server->mv->m_nButtons & IN_DUCK)
+		{
+			bool alreadyDucked = (game_movement_server->player->m_fFlags() & FL_DUCKING) ? true : false;
+
+			if ((buttonsPressed & IN_DUCK) && !(game_movement_server->player->m_fFlags() & FL_DUCKING))
+			{
+				// Use 1 second so super long jump will work
+				game_movement_server->player->m_Local().m_flDucktime = 1000;
+				game_movement_server->player->m_Local().m_bDucking = true;
+			}
+
+			float duckmilliseconds = MAX(0.0f, 1000.0f - (float)game_movement_server->player->m_Local().m_flDucktime);
+			float duckseconds = duckmilliseconds / 1000.0f;
+
+			//time = MAX( 0.0, ( 1.0 - (float)player->m_Local.m_flDucktime / 1000.0 ) );
+
+			if (game_movement_server->player->m_Local().m_bDucking)
+			{
+				//if (!(game_movement_server->player->m_fFlags() & FL_ANIMDUCKING))
+				//	game_movement_server->player->AddFlag(FL_ANIMDUCKING);
+
+				// Finish ducking immediately if duck time is over or not on ground
+				if ((duckseconds > TIME_TO_DUCK) ||
+					(game_movement_server->player->GetGroundEntity() == NULL) ||
+					alreadyDucked)
+				{
+					game_movement_server->FinishDuck();
+				}
+				else
+				{
+					// Calc parametric time
+					float duckFraction = SimpleSpline(duckseconds / TIME_TO_DUCK);
+					game_movement_server->SetDuckedEyeOffset(duckFraction);
+				}
+			}
+		}
+		else
+		{
+			// Try to unduck unless automovement is not allowed
+			// NOTE: When not onground, you can always unduck
+			if (game_movement_server->player->m_Local().m_bAllowAutoMovement || game_movement_server->player->GetGroundEntity() == NULL)
+			{
+				if ((buttonsReleased & IN_DUCK) && (game_movement_server->player->m_fFlags() & FL_DUCKING))
+				{
+					// Use 1 second so super long jump will work
+					game_movement_server->player->m_Local().m_flDucktime = 1000;
+					game_movement_server->player->m_Local().m_bDucking = true;  // or unducking
+				}
+
+				float duckmilliseconds = MAX(0.0f, 1000.0f - (float)game_movement_server->player->m_Local().m_flDucktime);
+				float duckseconds = duckmilliseconds / 1000.0f;
+
+				if (game_movement_server->CanUnduck())
+				{
+					if (game_movement_server->player->m_Local().m_bDucking ||
+						game_movement_server->player->m_Local().m_bDucked) // or unducking
+					{
+						//if (game_movement_server->player->m_fFlags() & FL_ANIMDUCKING)
+						//	game_movement_server->player->RemoveFlag(FL_ANIMDUCKING);
+
+						// Finish ducking immediately if duck time is over or not on ground
+						if ((duckseconds > TIME_TO_UNDUCK) ||
+							(game_movement_server->player->GetGroundEntity() == NULL))
+						{
+							game_movement_server->FinishUnDuck();
+						}
+						else
+						{
+							// Calc parametric time
+							float duckFraction = SimpleSpline(1.0f - (duckseconds / TIME_TO_UNDUCK));
+							game_movement_server->SetDuckedEyeOffset(duckFraction);
+						}
+					}
+				}
+				else
+				{
+					// Still under something where we can't unduck, so make sure we reset this timer so
+					//  that we'll unduck once we exit the tunnel, etc.
+					game_movement_server->player->m_Local().m_flDucktime = 1000;
+				}
+			}
+		}
+	}
+
+	//Hooks::DuckServerOriginal(ecx);
+}
+
+bool __fastcall Hooks::CheckJumpButtonServer(void* ecx)
+{
+	if (!Config::Movements::bCSGameMovement || !engine->IsDedicatedServer())
+		return Hooks::CheckJumpButtonServerOriginal(ecx);
+
+	if (!game_movement_server->player->IsAlive())
+	{
+		game_movement_server->mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
+		return false;
+	}
+
+	// See if we are waterjumping.  If so, decrement count and return.
+	if (game_movement_server->player->m_flWaterJumpTime())
+	{
+		game_movement_server->player->m_flWaterJumpTime() -= interfaces::globals->frametime;
+		if (game_movement_server->player->m_flWaterJumpTime() < 0)
+			game_movement_server->player->m_flWaterJumpTime() = 0;
+
+		return false;
+	}
+
+	// If we are in the water most of the way...
+	if (game_movement_server->player->m_nWaterLevel() >= 2)
+	{
+		// swimming, not jumping
+		game_movement_server->SetGroundEntity(NULL);
+
+		if (game_movement_server->player->GetWaterType() == CONTENTS_WATER)    // We move up a certain amount
+			game_movement_server->mv->m_vecVelocity[2] = 100;
+		else if (game_movement_server->player->GetWaterType() == CONTENTS_SLIME)
+			game_movement_server->mv->m_vecVelocity[2] = 80;
+
+		// play swiming sound
+		if (game_movement_server->player->m_flSwimSoundTime() <= 0)
+		{
+			// Don't play sound again for 1 second
+			game_movement_server->player->m_flSwimSoundTime() = 1000;
+			game_movement_server->PlaySwimSound();
+		}
+
+		return false;
+	}
+
+	// No more effect
+	if (game_movement_server->player->GetGroundEntity() == NULL)
+	{
+		game_movement_server->mv->m_nOldButtons |= IN_JUMP;
+		return false;		// in air, so no effect
+	}
+
+	if (game_movement_server->mv->m_nOldButtons & IN_JUMP)
+		return false;		// don't pogo stick
+
+	//if (!sv_enablebunnyhopping.GetBool())
 	//{
-	//	game_movement_server->mv->m_nOldButtons |= IN_DUCK;
+	//	PreventBunnyJumping();
 	//}
-	//else
+
+	// In the air now.
+	game_movement_server->SetGroundEntity(NULL);
+
+	//game_movement_server->player->PlayStepSound((Vector&)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+
+	//MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
+	//game_movement_server->player->DoAnimationEvent(PLAYERANIMEVENT_JUMP);
+
+	float flGroundFactor = 1.0f;
+	//if (game_movement_server->player->m_pSurfaceData())
 	//{
-	//	game_movement_server->mv->m_nOldButtons &= ~IN_DUCK;
+	//	flGroundFactor = game_movement_server->player->m_pSurfaceData()->game.jumpFactor;
 	//}
 
-	//// Dead players don't duck.
-	//if (!game_movement_server->player->IsAlive() && !game_movement_server->player->IsObserver())
+	// if we weren't ducking, bots and hostages do a crouchjump programatically
+	if ((!game_movement_server->player) && !(game_movement_server->mv->m_nButtons & IN_DUCK))
+	{
+		game_movement_server->player->m_duckUntilOnGround() = true;
+		game_movement_server->FinishDuck();
+	}
+
+	// Acclerate upward
+	// If we are ducking...
+	float startz = game_movement_server->mv->m_vecVelocity[2];
+	if (game_movement_server->player->m_duckUntilOnGround() || (game_movement_server->player->m_Local().m_bDucking) || (game_movement_server->player->m_fFlags() & FL_DUCKING))
+	{
+		// d = 0.5 * g * t^2		- distance traveled with linear accel
+		// t = sqrt(2.0 * 45 / g)	- how long to fall 45 units
+		// v = g * t				- velocity at the end (just invert it to jump up that high)
+		// v = g * sqrt(2.0 * 45 / g )
+		// v^2 = g * g * 2.0 * 45 / g
+		// v = sqrt( g * 2.0 * 45 )
+
+		game_movement_server->mv->m_vecVelocity[2] = flGroundFactor * sqrt(2 * 800 * 57.0);  // 2 * gravity * height
+	}
+	else
+	{
+		game_movement_server->mv->m_vecVelocity[2] += flGroundFactor * sqrt(2 * 800 * 57.0);  // 2 * gravity * height
+	}
+
+	if (game_movement_server->player->m_flStamina() > 0)
+	{
+		float flRatio;
+
+		flRatio = (STAMINA_MAX - ((game_movement_server->player->m_flStamina() / 1000.0) * STAMINA_RECOVER_RATE)) / STAMINA_MAX;
+
+		game_movement_server->mv->m_vecVelocity[2] *= flRatio;
+	}
+
+	game_movement_server->player->m_flStamina() = (STAMINA_COST_JUMP / STAMINA_RECOVER_RATE) * 1000.0;
+
+	game_movement_server->FinishGravity();
+
+	game_movement_server->mv->m_outWishVel.z += game_movement_server->mv->m_vecVelocity[2] - startz;
+	game_movement_server->mv->m_outStepHeight += 0.1f;
+
+	/* ehmm, idk */
+
+	//// allow bots to react
+	//IGameEvent* event = gameeventmanager->CreateEvent("player_jump");
+	//if (event)
 	//{
-	//	if (game_movement_server->player->m_fFlags() & FL_DUCKING)
-	//	{
-	//		g_GameMovement_server.FinishUnDuck(true);
-	//	}
-
-	//	return;
+	//	event->SetInt("userid", game_movement_server->player->GetUserID());
+	//	gameeventmanager->FireEvent(event);
 	//}
 
-	//if (m_duckUntilOnGround_s)
-	//{
-	//	// This code handles the case where a bot is jumping; they
-	//	// automatically crouch jump, and we want to decide if they are
-	//	// ready to un-duck here.
+	// Flag that we jumped.
+	game_movement_server->mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
+	return true;
 
-	//	// TODO: Should we move this code into the bot movement logic
-	//	//       instead?
-
-	//	// $$$REI There still seems to be a way to end up in this state if the bot
-	//	//        was crouch-jumping at the end of the round; I haven't found where
-	//	//        his flags are getting reset.  Will fix later, and just reset the
-	//	//        inconsistent state here.  Next tick the bot will behave normally.
-	//	// Assert( player->GetFlags() & FL_DUCKING );
-	//	if ((game_movement_server->player->m_fFlags() & FL_DUCKING) == 0)
-	//	{
-	//		m_duckUntilOnGround_s = false;
-	//		return;
-	//	}
-
-	//	// If we have landed, we are done with 'duck until on ground'.
-	//	if (!bInAir)
-	//	{
-	//		m_duckUntilOnGround_s = false;
-
-	//		// Stop crouching if possible
-	//		if (g_GameMovement_server.CanUnduck(true))
-	//		{
-	//			g_GameMovement_server.FinishUnDuck(true);
-	//		}
-
-	//		return;
-	//	}
-
-	//	// Otherwise we are still in the air.
-	//	// Try to un-duck just as we land, for better animation and movement.
-
-	//	// If we're still going up, we aren't about to land.  Early-out.
-	//	if (game_movement_server->mv->m_vecVelocity.z > 0.0f)
-	//		return;
-
-	//	// Check if we are close enough to the ground and that there is room to un-duck.
-	//	trace_t trace;
-	//	Vector newOrigin;
-	//	Vector groundCheck;
-
-	//	VectorCopy(game_movement_server->mv->GetAbsOrigin(), newOrigin);
-	//	Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
-	//	Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
-	//	newOrigin -= (hullSizeNormal - hullSizeCrouch);
-	//	groundCheck = newOrigin;
-	//	groundCheck.z -= game_movement_server->player->m_flStepSize();
-
-	//	UTIL_TraceHull(newOrigin, groundCheck, VEC_HULL_MIN, VEC_HULL_MAX, game_movement_server->PlayerSolidMask(), game_movement_server->player, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
-	//	if (trace.startsolid			// No room to unduck.
-	//		|| trace.fraction == 1.0f	// We are still in the air
-	//		)
-	//		return;
-
-	//	// Success!  We can un-duck.  Remove "un-duck when possible" flag.
-	//	m_duckUntilOnGround_s = false;
-
-	//	// Theoretically CanUnduck() should always succeed here since we just did a hull trace.
-	//	// REI: But the hulltrace in CanUnduck() looks slightly different than this one; it uses
-	//	//         newOrigin = mv->GetAbsOrigin() + -0.5f * ( hullSizeNormal - hullSizeCrouch )
-	//	//      and traces from mv->GetAbsOrigin() to newOrigin instead of from newOrigin to a
-	//	//      step away.
-	//	if (g_GameMovement_server.CanUnduck(true))
-	//	{
-	//		g_GameMovement_server.FinishUnDuck(true);
-	//	}
-
-	//	return;
-	//}
-
-	//// Reduce duck-spam penalty over time
-	//server::m_flDuckSpeed = Approach(CS_PLAYER_DUCK_SPEED_IDEAL, server::m_flDuckSpeed, globals->interval_per_tick * 3.0f);
-
-	//// Use the last-known position of full crouch speed to restore crouch speed as a function of physical player position.
-	//// The goal is that moving a sufficient distance should reset crouch speed in an intuitive manner.
-	//if (server::m_flDuckSpeed >= CS_PLAYER_DUCK_SPEED_IDEAL)
-	//{
-	//	server::m_vecLastPositionAtFullCrouchSpeed = game_movement_server->player->GetAbsOrigin().AsVector2D();
-	//}
-	//else if (server::m_flDuckAmount <= 0 || server::m_flDuckAmount >= 1)
-	//{
-	//	//debugoverlay->AddLineOverlay( player->m_vecLastPositionAtFullCrouchSpeed, player->GetAbsOrigin(), 255,0,0, true, 0.1f );
-	//	//debugoverlay->AddTextOverlay( player->GetAbsOrigin(), 0.1f, "%f", player->m_flDuckSpeed );
-
-	//	float flDistToLastPositionAtFullCrouchSpeed = server::m_vecLastPositionAtFullCrouchSpeed.DistToSqr(game_movement_server->player->GetAbsOrigin().AsVector2D());
-
-	//	// if we're sufficiently far from the last full crouch speed location, we can safely restore crouch speed faster.
-	//	if (flDistToLastPositionAtFullCrouchSpeed > (64 * 64))
-	//	{
-	//		server::m_flDuckSpeed = Approach(CS_PLAYER_DUCK_SPEED_IDEAL, server::m_flDuckSpeed, globals->interval_per_tick * 6.0f);
-	//	}
-	//}
-
-	//bool duckButtonHeld = (game_movement_server->mv->m_nButtons & IN_DUCK) != 0;
-
-	//if (!duckButtonHeld && server::m_flDuckAmount > 0)
-	//{
-	//	// Not sure if this is the appropriate use of this flag. It seems odd to have a dedicated variable that effectively means crouch-is-not-zero-or-one.
-
-	//	// When the round restarts with the player in the ducked state, they can get stuck crouched.
-	//	// To prevent this, I'm setting the "duck-in-progress" bool (m_bDucking) to true if
-	//	// the player is ever in the state of NOT holding the duck button but is still ducked.
-	//	server::m_bDucking = true;
-	//}
-	//else if (duckButtonHeld && server::m_flDuckAmount < 1)
-	//{
-	//	// or if the player IS holding the duck button but isn't yet fully ducked.
-	//	server::m_bDucking = true;
-	//}
-
-	//// Handle animating into the ducking pose.
-	//if (duckButtonHeld && server::m_bDucking)
-	//{
-	//	//Assert(!player->m_Local.m_bDucked);
-
-	//	// ducking is always a little slower than unducking
-	//	float duckSpeed = server::m_flDuckSpeed * 0.8f;
-
-	//	server::m_flDuckAmount = Approach(1.0f, server::m_flDuckAmount, globals->interval_per_tick * duckSpeed);
-
-	//	// Finish ducking immediately if duck time is over or not on ground
-	//	if (server::m_flDuckAmount >= 1.0f || !playerTouchingGround)
-	//	{
-	//		g_GameMovement_server.FinishDuck(true);
-	//	}
-	//	else
-	//	{
-	//		game_movement_server->SetDuckedEyeOffset(server::m_flDuckAmount);
-	//	}
-
-	//	// REI: For some reason we don't set this flag immediately, but wait until you have ducked a little bit.  Investigate?
-	//	if (server::m_flDuckAmount >= 0.1f && !(game_movement_server->player->m_fFlags() & FL_ANIMDUCKING))
-	//	{
-	//		game_movement_server->player->AddFlag(FL_ANIMDUCKING);
-	//	}
-	//}
-
-	//// Handle animating out of ducking pose.
-	//if (!duckButtonHeld && server::m_bDucking
-	//	// Try to unduck unless automovement is not allowed
-	//	// NOTE: When not onground, you can always unduck
-	//	// REI: Cloned behavior from old code, not sure when m_bAllowAutomovement is used?
-	//	&& (server::m_bAllowAutoMovement || !playerTouchingGround))
-	//{
-	//	if (g_GameMovement_server.CanUnduck(true))
-	//	{
-	//		// Always unduck at at least 1.5 to prevent advantageous semi-ducked positions
-	//		float duckSpeed = MAX(1.5f, server::m_flDuckSpeed);
-
-	//		server::m_flDuckAmount = Approach(0.0f, server::m_flDuckAmount, globals->interval_per_tick * duckSpeed);
-	//		server::m_bDucked = false;
-
-	//		if (server::m_flDuckAmount <= 0.0f || !playerTouchingGround)
-	//		{
-	//			g_GameMovement_server.FinishUnDuck(true);
-	//		}
-	//		else
-	//		{
-	//			game_movement_server->SetDuckedEyeOffset(server::m_flDuckAmount);
-	//		}
-
-	//		// Remove the ducked flags if we're not fully ducked anymore.
-	//		// REI: This is inconsistent with the documentation for these flags, but I'm not sure why the code
-	//		//      is doing this.  It does mean you lose your ducking accuracy bonus very early in the un-duck,
-	//		//      which is certainly important.
-	//		if (server::m_flDuckAmount <= 0.75f && game_movement_server->player->m_fFlags() & (FL_ANIMDUCKING | FL_DUCKING))
-	//		{
-	//			game_movement_server->player->RemoveFlag(FL_ANIMDUCKING | FL_DUCKING);
-	//		}
-	//	}
-	//	else
-	//	{
-	//		// Reset to fully-ducked as we went under something we can't un-duck from.
-	//		// We'll try again once the player has moved out of the obstructing obstacle.
-	//		server::m_flDuckAmount = 1.0f;
-	//		server::m_bDucked = true;
-	//		server::m_bDucking = false;
-	//		game_movement_server->player->AddFlag(FL_ANIMDUCKING | FL_DUCKING);
-
-	//		game_movement_server->SetDuckedEyeOffset(server::m_flDuckAmount);
-	//	}
-	//}
-
-	//// REI: I think I've fixed all cases of this happening.  Leaving it in for now.  $$$REI remove this after testing shows it never happening again.
-	//if (server::m_flDuckAmount <= 0 && (game_movement_server->player->m_fFlags() & FL_ANIMDUCKING))
-	//{
-	//	//AssertMsg1(false, "Clearing FL_ANIMDUCKING flag on player %s to prevent crab-walk.  Please let Ryan know if you hit this.", player->GetPlayerName());
-	//	game_movement_server->player->RemoveFlag(FL_ANIMDUCKING);
-	//}
-
-	////if (IsPreCrouchUpdateDemo())
-	////{
-	////	// compatibility for old demos using the old crouch values
-	////	if (player->m_Local.m_nDuckTimeMsecs)
-	////	{
-	////		player->AddFlag(FL_ANIMDUCKING | FL_DUCKING);
-	////	}
-	////	else
-	////	{
-	////		player->RemoveFlag(FL_ANIMDUCKING | FL_DUCKING);
-	////	}
-	////	const float CS_DUCK_TIME_MSECS = 150.0f;
-	////	int millisecondsDucked = MAX(0, CS_DUCK_TIME_MSECS - player->m_Local.m_nDuckTimeMsecs);
-	////	player->m_flDuckAmount = (float)millisecondsDucked / (float)CS_DUCK_TIME_MSECS;
-	////	SetDuckedEyeOffset(player->m_flDuckAmount);
-	////}
-
-	//g_GameMovement_server.HandleDuckingSpeedCrop(server::m_flDuckAmount, true);
-
-	Hooks::DuckServerOriginal(ecx);
+	//return Hooks::CheckJumpButtonServerOriginal(ecx);
 }
 
 int __fastcall Hooks::TryPlayerMoveServer(void* ecx, void* ebp, Vector* pFirstDest, trace_t* pFirstTrace)
 {
-	if (!Config::Movements::bTryPlayerMove || !engine->IsDedicatedServer())
+	if (!Config::Movements::bCSGameMovement || !engine->IsDedicatedServer())
 		return Hooks::TryPlayerMoveServerOriginal(ecx, ebp, pFirstDest, pFirstTrace);
 
 	int			bumpcount, numbumps;
@@ -435,7 +637,7 @@ int __fastcall Hooks::TryPlayerMoveServer(void* ecx, void* ebp, Vector* pFirstDe
 		//  and pressing forward and nobody was really using this bounce/reflection feature anyway...
 		if (numplanes == 1 &&
 			game_movement_server->player->m_MoveType() == MOVETYPE_WALK &&
-			game_movement->player->m_hGroundEntity() == NULL)
+			game_movement_server->player->GetGroundEntity() == NULL)
 		{
 			for (i = 0; i < numplanes; i++)
 			{

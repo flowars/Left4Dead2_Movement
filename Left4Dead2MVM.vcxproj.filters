@@ -114,9 +114,6 @@
     <ClCompile Include="Hooks\Functions\EmitSound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Hooks\Functions\GameMovement_Client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Features\Misc\Misc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -129,12 +126,6 @@
     <ClCompile Include="Utils\Render\Structures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Hooks\Functions\GameMovement_Server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\Interfaces\CSGO_GameMovement.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Features\Visuals\Weather.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -145,6 +136,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Hooks\Functions\FindParm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\Classes\GameMovement_CS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Functions\GameMovement_Client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hooks\Functions\GameMovement_Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -536,9 +536,6 @@
     <ClInclude Include="SDK\Interfaces\IEngineVGui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SDK\Interfaces\CSGO_GameMovement.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SDK\Classes\BaseHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -552,6 +549,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SDK\Interfaces\IVModelInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Classes\CGameRules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Classes\IGamesystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Classes\SharedDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Classes\GameMovement_CS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Classes\CPlayerLocalData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Interfaces\PhysicsSurfaceProps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

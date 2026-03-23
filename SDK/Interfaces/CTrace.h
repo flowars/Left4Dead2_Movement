@@ -313,6 +313,24 @@ public:
 	}
 };
 
+typedef bool (*ShouldHitFunc_t)(IHandleEntity* pHandleEntity, int contentsMask);
+
+class CTraceFilterSimple : public CTraceFilter
+{
+public:
+	CTraceFilterSimple(const IHandleEntity* passentity, int collisionGroup, ShouldHitFunc_t pExtraShouldHitCheckFn = NULL);
+	virtual bool ShouldHitEntity(IHandleEntity* pHandleEntity, int contentsMask) { return false; };
+	virtual void SetPassEntity(const IHandleEntity* pPassEntity) { m_pPassEnt = pPassEntity; }
+	virtual void SetCollisionGroup(int iCollisionGroup) { m_collisionGroup = iCollisionGroup; }
+
+	const IHandleEntity* GetPassEntity(void) { return m_pPassEnt; }
+
+private:
+	const IHandleEntity* m_pPassEnt;
+	int m_collisionGroup;
+	ShouldHitFunc_t m_pExtraShouldHitCheckFunction;
+
+};
 
 //-----------------------------------------------------------------------------
 // Classes need not inherit from these

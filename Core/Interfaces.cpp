@@ -20,8 +20,9 @@ void interfaces::Setup()
 
 	//server
 	game_movement_server = Capture<CGameMovementServer>("server.dll", "GameMovement001");
-	move_helper_server = **reinterpret_cast<IMoveHelper***>(memory::PatternScan(("server.dll"), ("A1 ? ? ? ? 8B 10 8B 52 1C 81 C1 ? ? ? ? 68 ? ? ? ?")) + 1);
 	trace_server = Capture<IEngineTrace>("engine.dll", "IEngineSoundServer003");
+	move_helper_server = **reinterpret_cast<IMoveHelper***>(memory::PatternScan("server.dll", "A1 ? ? ? ? 8B 10 8B 52 1C 81 C1 ? ? ? ? 68 ? ? ? ?") + 1);
+	game_rules = **reinterpret_cast<CGameRules***>(memory::PatternScan("server.dll", "8B 0D ? ? ? ? 3B CE 74 09 8B 01 8B 50 30 6A 01 FF D2") + 2);
 
 	//paterns
 	client_state = **reinterpret_cast<IClientState***>(memory::PatternScan("engine.dll", "A1 ? ? ? ? 83 C0 08 C3") + 1);

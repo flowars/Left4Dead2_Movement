@@ -1,9 +1,10 @@
 #pragma once
 
 #include "BaseTypes.h"
-#include "Const.h"
+#include "CPlayerLocalData.h"
 #include "IClientEntity.h"
 #include "CUserCmd.h"
+#include "../Interfaces/PhysicsSurfaceProps.h"
 
 #include "../NetVars/NetVars.h"
 #include "../../Utils/Memory.h"
@@ -76,17 +77,31 @@ public:
 	NETVAR("DT_BasePlayer", "m_vecVelocity[0]", m_vecVelocity, Vector)
 	NETVAR("DT_BasePlayer", "m_flFallVelocity", m_flFallVelocity, float)
 	NETVAR("DT_BasePlayer", "m_nTickBase", m_nTickBase, int)
-	NETVAR("DT_BasePlayer", "m_flStepSize", m_flStepSize, float)
 	NETVAR("DT_BasePlayer", "m_iObserverMode", m_iObserverMode, int)
 	NETVAR("DT_BasePlayer", "m_vecViewOffset", m_vecViewOffset, Vector)
+	NETVAR("DT_BasePlayer", "m_flStepSize", m_flStepSize, float)
+	NETVAR("DT_BasePlayer", "m_nWaterLevel", m_nWaterLevel, unsigned char)
+	//NETVAR("DT_BasePlayer", "m_bDucked", m_bDucked, bool)
+	//NETVAR("DT_BasePlayer", "m_bDucking", m_bDucking, bool)
+	NETVAR("DT_BasePlayer", "m_bAllowAutoMovement", m_bAllowAutoMovement, bool)
+	NETVAR("DT_BaseAnimating", "m_flModelScale", m_flModelScale, float)
+	//NETVAR("DT_CSLocalPlayerExclusive", "m_duckUntilOnGround", m_duckUntilOnGround, bool)
 	NETVAR_PTR("DT_BasePlayer", "m_hGroundEntity", m_hGroundEntity, CBaseEntity);
+	NETVAR("DT_BasePlayer", "m_Local", m_Local, CPlayerLocalData)
 
 	OFFSET(int, m_MoveType, 0x144)
+	OFFSET(float, m_flStamina, 0x18A0)
+	OFFSET(float, m_flWaterJumpTime, 0x13B8)
+	OFFSET(float, m_flSwimSoundTime, 0x13BC)
 	OFFSET(int, m_afButtonDisabled, 0x1420)
 	OFFSET(int, m_afButtonForced, 0x1424)
 	OFFSET(float, m_surfaceFriction, 0x13C4)
 	OFFSET(float, m_flFallVelocity_server, 0x1AA8)
 	OFFSET(unsigned int, m_afPhysicsFlags, 0x1D24)
+	OFFSET(bool, m_duckUntilOnGround, 0x18AC)
+	OFFSET_PTR(surfacedata_t, m_pSurfaceData, 0x165C)
+	//OFFSET(float, m_flDucktime, 0x11F0)
+
 	datamap_t* DataMap() {
 		return memory::Call<datamap_t*>(this, 18);
 	}
@@ -125,6 +140,34 @@ public:
 		return UTIL_PlayerByIndexfn(index);
 	}
 
+	void SetMoveType(MoveType_t val, MoveCollide_t moveCollide)
+	{
+		using fn = void(__fastcall*)(void*, MoveType_t, MoveCollide_t);
+		static fn SetMoveTypefn = (fn)memory::PatternScan("client.dll", "55 8B EC 8A 45 08 8A 55 0C 88 81 ? ? ? ? 88 91 ? ? ? ? 5D");
+		SetMoveTypefn(this, val, moveCollide);
+	}
+
+	void SetMoveCollide(MoveCollide_t val)
+	{
+		using fn = void(__fastcall*)(void*, MoveCollide_t);
+		static fn SetMoveTypefn = (fn)memory::PatternScan("client.dll", "55 8B EC 8A 45 08 88 81 45 01 00 00 5D C2 04 00");
+		SetMoveTypefn(this, val);
+	}
+
+	CBaseEntity* GetGroundEntity()
+	{
+		using fn = CBaseEntity*(__fastcall*)(void*);
+		static fn GetGroundEntityfn = (fn)memory::PatternScan("client.dll", "8B 81 3C 01 00 00 83 F8 FF 74 23 8B 15 ? ? ? ? 8B C8 81 E1 ? ? ? ? 03 C9 8D 4C CA 04 85 C9 74 0B C1 E8 0C 39 41 04 75 03 8B 01 C3 33 C0 C3");
+		return GetGroundEntityfn(this);
+	}
+
+	int GetWaterType()
+	{
+		using fn = int(__fastcall*)(void*);
+		static fn GetWaterTypefn = (fn)memory::PatternScan("client.dll", "8A 89 ? ? ? ? 33 C0 F6 C1 01 74 05 B8 ? ? ? ? F6 C1 02 74 03");
+		return GetWaterTypefn(this);
+	}
+
 	void AddFlag(int flags)
 	{
 		this->m_fFlags() |= flags;
@@ -145,22 +188,38 @@ class CPlayer_Server : public CBaseEntity
 {
 public:
 	NETVAR("DT_BasePlayer", "m_iHealth", m_iHealth, int)
-	NETVAR("DT_BasePlayer", "m_fFlags", m_fFlags, int)
+	//NETVAR("DT_BasePlayer", "m_fFlags", m_fFlags, int)
 	NETVAR("DT_BasePlayer", "m_vecOrigin", m_vecOrigin, Vector)
 	NETVAR("DT_BasePlayer", "m_vecVelocity[0]", m_vecVelocity, Vector)
 	NETVAR("DT_BasePlayer", "m_flFallVelocity", m_flFallVelocity, float)
 	NETVAR("DT_BasePlayer", "m_nTickBase", m_nTickBase, int)
-	NETVAR("DT_BasePlayer", "m_flStepSize", m_flStepSize, float)
 	NETVAR("DT_BasePlayer", "m_iObserverMode", m_iObserverMode, int)
 	NETVAR("DT_BasePlayer", "m_vecViewOffset", m_vecViewOffset, Vector)
+	NETVAR("DT_BasePlayer", "m_flStepSize", m_flStepSize, float)
+	NETVAR("DT_BasePlayer", "m_nWaterLevel", m_nWaterLevel, unsigned char)
+	NETVAR("DT_BasePlayer", "m_MoveCollide", m_MoveCollide, unsigned char)
+	//NETVAR("DT_BasePlayer", "m_bDucked", m_bDucked, bool)
+	//NETVAR("DT_BasePlayer", "m_bDucking", m_bDucking, bool)
+	NETVAR("DT_BasePlayer", "m_bAllowAutoMovement", m_bAllowAutoMovement, bool)
+	NETVAR("DT_BaseAnimating", "m_flModelScale", m_flModelScale, float)
+	//NETVAR("DT_CSLocalPlayerExclusive", "m_duckUntilOnGround", m_duckUntilOnGround, bool)
 	NETVAR_PTR("DT_BasePlayer", "m_hGroundEntity", m_hGroundEntity, CBaseEntity);
+	//NETVAR("DT_BasePlayer", "m_Local", m_Local, CPlayerLocalData)
 
-	OFFSET(int, m_MoveType, 0x144)
+	OFFSET(unsigned char, m_MoveType, 0x172)
+	OFFSET(int, m_fFlags, 0x13C)
+	OFFSET(float, m_flStamina, 0x2854)
+	OFFSET(float, m_flWaterJumpTime, 0x2014)
+	OFFSET(float, m_flSwimSoundTime, 0x2028)
 	OFFSET(int, m_afButtonDisabled, 0x1420)
 	OFFSET(int, m_afButtonForced, 0x1424)
 	OFFSET(float, m_surfaceFriction, 0x13C4)
 	OFFSET(float, m_flFallVelocity_server, 0x1AA8)
 	OFFSET(unsigned int, m_afPhysicsFlags, 0x144)
+	OFFSET(CPlayerLocalDataServer, m_Local, 0x1A44)
+	OFFSET(bool, m_duckUntilOnGround, 0x28A4)
+	OFFSET_PTR(surfacedata_t, m_pSurfaceData, 0x2180)
+	//OFFSET(float, m_flDucktime, 0x1A98)
 
 	datamap_t* DataMap() {
 		return memory::Call<datamap_t*>(this, 18);
@@ -198,6 +257,32 @@ public:
 		using fn = CBasePlayer * (__cdecl*)(int);
 		static fn UTIL_PlayerByIndexfn = (fn)memory::PatternScan("server.dll", "55 8B EC 8B 45 08 57 33 FF 85 C0 7E 4E 8B 0D");
 		return UTIL_PlayerByIndexfn(index);
+	}
+
+	void SetMoveType(MoveType_t val, MoveCollide_t moveCollide)
+	{
+		using fn = void(__fastcall*)(void*, MoveType_t, MoveCollide_t);
+		static fn SetMoveTypefn = (fn)memory::PatternScan("server.dll", "55 8B EC 53 8B 5D 08 56 8B F1 8A 86 ? ? ? ?");
+		SetMoveTypefn(this, val, moveCollide);
+	}
+
+	int GetWaterType()
+	{
+		using fn = int(__fastcall*)(void*);
+		static fn GetWaterTypefn = (fn)memory::PatternScan("server.dll", "8A 89 ? ? ? ? 33 C0 F6 C1 01 74 05 B8 ? ? ? ? F6 C1 02 74 03");
+		return GetWaterTypefn(this);
+	}
+
+	CBaseEntity* GetGroundEntity()
+	{
+		using fn = CBaseEntity * (__fastcall*)(void*);
+		static fn GetGroundEntityfn = (fn)memory::PatternScan("server.dll", "8B 81 44 02 00 00 83 F8 FF 74 23 8B 15 ? ? ? ? 8B C8 81 E1 ? ? ? ? 03 C9 8D 4C CA 04 85 C9 74 0B C1 E8 0C 39 41 04 75 03 8B 01 C3 33 C0 C3");
+		return GetGroundEntityfn(this);
+	}
+
+	void SetMoveCollide(MoveCollide_t val)
+	{
+		this->m_MoveCollide() = val;
 	}
 
 	void AddFlag(int flags)
