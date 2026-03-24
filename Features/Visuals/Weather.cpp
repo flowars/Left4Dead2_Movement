@@ -24,7 +24,6 @@ void Visuals::Reset_Weather(const bool cleanup) {
 
         rain_entity->OnDataChanged(DATA_UPDATE_CREATED);
         rain_entity->PostDataUpdate(DATA_UPDATE_CREATED);
-
         if (rain_entity->Networkable())
             rain_entity->Release(1);
 
@@ -50,31 +49,28 @@ void Visuals::Update_Weather() {
     }
 
     static int weather_type = 0;
+
     switch (Config::Visuals::iWeather) {
-    case 0: {
-        weather_type = 3;
-        break;
-    }
-    case 1: {
-        weather_type = 4;
-        break;
-    }
-    case 2: {
-        weather_type = 5;
-        break;
-    }
-    case 3: {
-        weather_type = 6;
-        break;
-    }
-    case 4: {
-        weather_type = 7;
-        break;
-    }
-    case 5: {
-        weather_type = 8;
-        break;
-    }
+        case 0: {
+            weather_type = 4;
+            break;
+        }
+        case 1: {
+            weather_type = 5;
+            break;
+        }
+        case 2: {
+            weather_type = 6;
+            break;
+        }
+        case 3: {
+            weather_type = 7;
+            break;
+        }
+        case 4: {
+            weather_type = 8;
+            break;
+        }
     }
     if (m_timer > -1) {
         --m_timer;
@@ -94,7 +90,7 @@ void Visuals::Update_Weather() {
     last_type = weather_type;
 
     memset(&precipitation_collideable, 0, sizeof(precipitation_collideable));
-
+    /* If you want make a insane snowfall precipitation for your p2c, look at -> https://github.com/GamerDude27/source-sdk-2010/blob/master/src/game/client/c_effects.cpp#L190C29-L205 */
     if (!created_rain && Config::Visuals::bWeather || Config::Visuals::bWeather && !last_state || interfaces::engine->IsConnected() && !reinterpret_cast<CPrecipitation*>(interfaces::entity_list->GetClientEntity(MAX_EDICTS - 1)) && rain_entity && Config::Visuals::bWeather) {
         if (created_rain && rain_entity)
             Reset_Weather();
@@ -108,7 +104,7 @@ void Visuals::Update_Weather() {
 
             printf("Created Precip: %p \n", rain_entity);
 
-            rain_entity->GetIndex() = -1;
+            //rain_entity->GetIndex() = -1;             // Game can't delete rain entity cause of this
 
             rain_entity->m_nPrecipType() = (precipitation_type_t) * &weather_type;
 
@@ -121,7 +117,6 @@ void Visuals::Update_Weather() {
 
             rain_entity->OnDataChanged(DATA_UPDATE_CREATED);
             rain_entity->PostDataUpdate(DATA_UPDATE_CREATED);
-
 
             created_rain = true;
         }

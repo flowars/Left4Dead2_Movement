@@ -1,5 +1,7 @@
 #include "Menu.h"
 
+ImGuiColorEditFlags w_alpha = ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_PickerHueBar;
+
 void Menu::Render() noexcept
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -37,8 +39,17 @@ void Menu::Render() noexcept
 		if (Config::Visuals::bWeather)
 		{
 			ImGui::Text("What type");
-			const char* weathertype[] = { "SnowFall", "Rain", "Ash", "Heavy Rain", "Bugs", "Smoke" };
+			const char* weathertype[] = { "Rain", "Ash", "Heavy Rain", "Bugs", "Smoke" };
 			ImGui::Combo("##weathertype", &Config::Visuals::iWeather, weathertype, IM_ARRAYSIZE(weathertype));
+		}
+
+		ImGui::Checkbox("Fog Changer", &Config::Visuals::bFog);
+		if(Config::Visuals::bFog){
+			ImGui::SameLine(); ImGui::ColorEdit4(("##FogColor"), Config::Visuals::fFogColor, w_alpha);
+			ImGui::Text(("Fog Distance"));
+			ImGui::SliderFloat(("##FogDistance"), &Config::Visuals::fFogDistance, 0.f, 1000.f);
+			ImGui::Text(("Fog Density"));
+			ImGui::SliderFloat(("##FogDensity"), &Config::Visuals::bFogDensity, 0.f, 100.f);
 		}
 	}
 	else if (tab == 1)

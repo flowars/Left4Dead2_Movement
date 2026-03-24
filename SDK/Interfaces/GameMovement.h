@@ -148,9 +148,6 @@ inline void CMoveData::SetAbsOrigin(const Vector& vec)
 class IMoveHelper
 {
 public:
-	// Call this to set the singleton
-	static IMoveHelper* GetSingleton() { return sm_pSingleton; }
-
 	// Methods associated with a particular entity
 	virtual	char const* GetName(int handle) const = 0;
 

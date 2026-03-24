@@ -150,6 +150,9 @@
     <ClCompile Include="Hooks\Functions\GetTickInterval.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Features\Visuals\Fog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils\Console.h">

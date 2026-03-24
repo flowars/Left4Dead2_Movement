@@ -66,6 +66,7 @@ namespace Visuals
 	static bool last_state = false;
 	static bool last_state_type = false;
 	static bool created_rain = false;
+	static bool handle = false;
 
 	static CPrecipitation* rain_entity = nullptr;
 	static ClientClass* precipitation = nullptr;
@@ -73,4 +74,6 @@ namespace Visuals
 	void Reset_Weather(const bool cleanup = true);
 	void Update_Weather();
 	void* GetVCollideble();
+
+	void Fog();
 }

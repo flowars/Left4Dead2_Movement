@@ -7,6 +7,7 @@ void __fastcall Hooks::FrameStageHook(void* ecx, void* edx, ClientFrameStage_t c
 	if (curStage == FRAME_RENDER_START)
 	{
 		Visuals::Update_Weather();
+		Visuals::Fog();
 	}
 	else if (curStage == FRAME_NET_UPDATE_START)
 	{

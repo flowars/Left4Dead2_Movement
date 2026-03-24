@@ -14,6 +14,10 @@ bool check_edge_bug(CUserCmd* cmd, bool& brk) {
 		brk = true;
 		return false;
 	}
+	else if (unpredicted_velocity.z < 0.f && predicted_velocity.z > unpredicted_velocity.z && predicted_velocity.z == l4d2::half_gravity_per_tick && !(l4d2::local->m_fFlags() & FL_ONGROUND))
+	{
+		return true;
+	}
 	else if (unpredicted_velocity.z < 0.f && predicted_velocity.z > unpredicted_velocity.z && predicted_velocity.z < 0.f) {
 		int z_vel = predicted_velocity.z;
 
@@ -33,18 +37,24 @@ bool check_edge_bug(CUserCmd* cmd, bool& brk) {
 	}
 	return false;
 }
+
 /* Player when he jumps, always stay in ducked bbox, so it should be recoded only for stand || crouch state, but rn im too lazy */
+
 void Movement::EdgeBug()
 {
+
 	if (Config::Movements::EdgeBugNoDamage && Detect_EB)
 	{
 		/* set falldamage to 0 */
+		if(interfaces::engine->IsDedicatedServer())
+		{
+			CPlayer_Server* server_player = nullptr;
+			server_player = server_player->UTIL_PlayerByIndex(1);
 
-		CBasePlayer* server_player = nullptr;
-		server_player = server_player->UTIL_PlayerByIndex(1);
+			if (server_player)
+				server_player->m_flFallVelocity() = 0.f;
+		}
 
-		if (server_player)
-			server_player->m_flFallVelocity_server() = 0.f;
 	}
 
 	if (!(Config::Movements::bEdgeBug) || !CheckKey(Config::Movements::kEdgeBug)) {
@@ -159,7 +169,7 @@ void Movement::EdgeBug()
 				Prediction::RestoreEntityToPredictedFrame(interfaces::prediction->m_Split->m_nCommandsPredicted - 1);
 
 				for (int t = 1; t <= ticklimit; ++t) {
-
+		
 					Prediction::Begin(&predictcmd);
 					Prediction::Finish();
 

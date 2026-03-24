@@ -49,10 +49,9 @@ void Prediction::Begin(CUserCmd* cmd)
 
 	*l4d2::local->m_pCurrentCommand() = cmd;
 
-	if (static bool once = false; !once) {
-
-		interfaces::move_helper->SetHost(l4d2::local);
-		//Prediction_Player = *reinterpret_cast<CBasePlayer***>(memory::PatternScan("client.dll", "89 35 ? ? ? ? 0F 57 C0 F3 0F 2A 86 ? ? ? ?") + 2);
+	if (static bool once = false; !once) 
+	{
+		Prediction_Player = *reinterpret_cast<CBasePlayer***>(memory::PatternScan("client.dll", "89 35 ? ? ? ? 0F 57 C0 F3 0F 2A 86 ? ? ? ? F3 0F 59 41 ?") + 2);
 		Prediction_RandomSeed = *reinterpret_cast<unsigned int**>(memory::PatternScan("client.dll", "A1 ? ? ? ? 53 56 57 8B 7D 14 8D 4D 14") + 1);
 
 		once = true;
@@ -61,13 +60,13 @@ void Prediction::Begin(CUserCmd* cmd)
 	InPrediction = true;
 
 	*Prediction_RandomSeed = cmd->random_seed;
-	//*Prediction_Player = l4d2::local;
+	*Prediction_Player = l4d2::local;
 
 	m_flOldCurTime = interfaces::globals->curtime;
 	m_flOldFrameTime = interfaces::globals->frametime;
 	m_nOldTickCount = interfaces::globals->tickcount;
 
-	const int nTickBase = GetTickBase(cmd);
+	const int nTickBase = l4d2::local->m_nTickBase();
 	const bool Old_FirstTimePredicted = interfaces::prediction->m_Split->m_bFirstTimePredicted;
 	const bool Old_InPrediction = interfaces::prediction->m_bInPrediction;
 
@@ -77,6 +76,8 @@ void Prediction::Begin(CUserCmd* cmd)
 
 	cmd->buttons |= l4d2::local->m_afButtonForced();
 	cmd->buttons &= ~l4d2::local->m_afButtonDisabled();
+
+	interfaces::move_helper->SetHost(l4d2::local);
 
 	interfaces::game_movement->StartTrackPredictionErrors(l4d2::local);
 
@@ -115,7 +116,7 @@ void Prediction::Finish()
 	interfaces::globals->tickcount = m_nOldTickCount;
 
 	*Prediction_RandomSeed = -1;
-	//*Prediction_Player = nullptr;
+	*Prediction_Player = nullptr;
 
 	interfaces::game_movement->Reset();
 }

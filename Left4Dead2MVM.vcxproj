@@ -165,6 +165,7 @@
     <ClCompile Include="Features\Movement\Bhop.cpp" />
     <ClCompile Include="Features\Movement\EdgeBug.cpp" />
     <ClCompile Include="Features\Prediction\Prediction.cpp" />
+    <ClCompile Include="Features\Visuals\Fog.cpp" />
     <ClCompile Include="Features\Visuals\Weather.cpp" />
     <ClCompile Include="Hooks\Functions\CreateMove.cpp" />
     <ClCompile Include="Hooks\Functions\EmitSound.cpp" />

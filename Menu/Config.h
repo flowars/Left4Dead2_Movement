@@ -33,12 +33,17 @@ namespace Config {
 	{
 		inline bool bWeather = false;
 		inline int iWeather = 0;
+
+		inline bool bFog = false;
+		inline float fFogDistance = 0.f;
+		inline float bFogDensity = 0.f;
+		inline float fFogColor[3] = { 0.f, 0.f, 0.f };
 	}
 
 	namespace Misc
 	{
 		inline bool bInsecure = false;
-		inline int iTickRate = 128;
+		inline int iTickRate = 30;
 	}
 
 }

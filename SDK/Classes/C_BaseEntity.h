@@ -96,7 +96,6 @@ public:
 	OFFSET(int, m_afButtonDisabled, 0x1420)
 	OFFSET(int, m_afButtonForced, 0x1424)
 	OFFSET(float, m_surfaceFriction, 0x13C4)
-	OFFSET(float, m_flFallVelocity_server, 0x1AA8)
 	OFFSET(unsigned int, m_afPhysicsFlags, 0x1D24)
 	OFFSET(bool, m_duckUntilOnGround, 0x18AC)
 	OFFSET_PTR(surfacedata_t, m_pSurfaceData, 0x165C)
@@ -191,7 +190,6 @@ public:
 	//NETVAR("DT_BasePlayer", "m_fFlags", m_fFlags, int)
 	NETVAR("DT_BasePlayer", "m_vecOrigin", m_vecOrigin, Vector)
 	NETVAR("DT_BasePlayer", "m_vecVelocity[0]", m_vecVelocity, Vector)
-	NETVAR("DT_BasePlayer", "m_flFallVelocity", m_flFallVelocity, float)
 	NETVAR("DT_BasePlayer", "m_nTickBase", m_nTickBase, int)
 	NETVAR("DT_BasePlayer", "m_iObserverMode", m_iObserverMode, int)
 	NETVAR("DT_BasePlayer", "m_vecViewOffset", m_vecViewOffset, Vector)
@@ -214,12 +212,12 @@ public:
 	OFFSET(int, m_afButtonDisabled, 0x1420)
 	OFFSET(int, m_afButtonForced, 0x1424)
 	OFFSET(float, m_surfaceFriction, 0x13C4)
-	OFFSET(float, m_flFallVelocity_server, 0x1AA8)
+	OFFSET(float, m_flFallVelocity, 0x1AA8)
 	OFFSET(unsigned int, m_afPhysicsFlags, 0x144)
 	OFFSET(CPlayerLocalDataServer, m_Local, 0x1A44)
 	OFFSET(bool, m_duckUntilOnGround, 0x28A4)
 	OFFSET_PTR(surfacedata_t, m_pSurfaceData, 0x2180)
-	//OFFSET(float, m_flDucktime, 0x1A98)
+	OFFSET(float, EnableAway, 0x3FEC)
 
 	datamap_t* DataMap() {
 		return memory::Call<datamap_t*>(this, 18);
@@ -252,9 +250,9 @@ public:
 		return reinterpret_cast<CUserCmd**>(uintptr_t(this) + offset);
 	}
 
-	CBasePlayer* UTIL_PlayerByIndex(int index)
+	CPlayer_Server* UTIL_PlayerByIndex(int index)
 	{
-		using fn = CBasePlayer * (__cdecl*)(int);
+		using fn = CPlayer_Server*(__cdecl*)(int);
 		static fn UTIL_PlayerByIndexfn = (fn)memory::PatternScan("server.dll", "55 8B EC 8B 45 08 57 33 FF 85 C0 7E 4E 8B 0D");
 		return UTIL_PlayerByIndexfn(index);
 	}
@@ -307,7 +305,6 @@ public:
 	NETVAR("DT_Precipitation", "m_nPrecipType", m_nPrecipType, precipitation_type_t)
 	NETVAR("DT_BaseEntity", "m_nModelIndex", m_nModelIndex, int)
 	OFFSET(unsigned int, GetIndex, 0x58)
-
 
 	ICollideable* Collideable() {
 		using original_fn = ICollideable * (__thiscall*)(void*);
